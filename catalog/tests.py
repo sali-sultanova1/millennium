@@ -1,9 +1,9 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 
-from django.db.models.deletion import ProtectedError
 from .models import Destination, Tour, TourImage
 
 

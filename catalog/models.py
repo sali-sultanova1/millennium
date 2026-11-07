@@ -1,7 +1,9 @@
+from decimal import Decimal
+
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from decimal import Decimal
-from django.core.exceptions import ValidationError
+
 
 class Destination(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Название")
