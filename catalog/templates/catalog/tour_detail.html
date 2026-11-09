@@ -1,67 +1,80 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ tour.title }} — Millennium</title>
-</head>
-<body>
-    <main>
-        <a href="{% url 'catalog:tour_list' %}">Все туры</a>
+{% extends "base.html" %}
 
-        <article>
-            <h1>{{ tour.title }}</h1>
-            <p>Направление: {{ tour.destination.name }}</p>
+{% block title %}{{ tour.title }} — Millennium{% endblock %}
 
-            {% if tour.resort %}
-                <p>Курорт: {{ tour.resort }}</p>
+{% block content %}
+    <a href="{% url 'catalog:tour_list' %}">Все туры</a>
+
+    <article>
+        <h1>{{ tour.title }}</h1>
+        {% if tour.images.all %}
+            <section aria-label="Фотографии тура">
+                {% for photo in tour.images.all %}
+                    <figure>
+                        <img
+                            src="{{ photo.image.url }}"
+                            alt="{{ photo.alt_text|default:tour.title }}"
+                            width="720"
+                            loading="lazy"
+                            style="max-width: 100%; height: auto;"
+                        >
+
+                        {% if photo.alt_text %}
+                            <figcaption>{{ photo.alt_text }}</figcaption>
+                        {% endif %}
+                    </figure>
+                {% endfor %}
+            </section>
+        {% endif %}
+        <p>Направление: {{ tour.destination.name }}</p>
+
+        {% if tour.resort %}
+            <p>Курорт: {{ tour.resort }}</p>
+        {% endif %}
+
+        {% if tour.hotel_name %}
+            <p>Отель: {{ tour.hotel_name }}</p>
+        {% endif %}
+
+        {% if tour.departure_city %}
+            <p>Город вылета: {{ tour.departure_city }}</p>
+        {% endif %}
+
+        {% if tour.departure_date %}
+            <p>Дата вылета: {{ tour.departure_date|date:"d.m.Y" }}</p>
+        {% endif %}
+
+        {% if tour.nights %}
+            <p>Количество ночей: {{ tour.nights }}</p>
+        {% endif %}
+
+        {% if tour.meal %}
+            <p>Питание: {{ tour.get_meal_display }}</p>
+        {% endif %}
+
+        {% if tour.meal_details %}
+            {{ tour.meal_details|linebreaks }}
+        {% endif %}
+
+        {% if tour.price %}
+            <p>
+                {% if tour.price_from %}От {% endif %}
+                {{ tour.price }} {{ tour.currency }}
+            </p>
+            <p>{{ tour.get_price_basis_display }}</p>
+
+            {% if tour.price_details %}
+                <p>{{ tour.price_details }}</p>
             {% endif %}
+        {% else %}
+            <p>Цена по запросу</p>
+        {% endif %}
 
-            {% if tour.hotel_name %}
-                <p>Отель: {{ tour.hotel_name }}</p>
-            {% endif %}
-
-            {% if tour.departure_city %}
-                <p>Город вылета: {{ tour.departure_city }}</p>
-            {% endif %}
-
-            {% if tour.departure_date %}
-                <p>Дата вылета: {{ tour.departure_date|date:"d.m.Y" }}</p>
-            {% endif %}
-
-            {% if tour.nights %}
-                <p>Количество ночей: {{ tour.nights }}</p>
-            {% endif %}
-
-            {% if tour.meal %}
-                <p>Питание: {{ tour.get_meal_display }}</p>
-            {% endif %}
-
-            {% if tour.meal_details %}
-                {{ tour.meal_details|linebreaks }}
-            {% endif %}
-
-            {% if tour.price %}
-                <p>
-                    {% if tour.price_from %}От {% endif %}
-                    {{ tour.price }} {{ tour.currency }}
-                </p>
-                <p>{{ tour.get_price_basis_display }}</p>
-
-                {% if tour.price_details %}
-                    <p>{{ tour.price_details }}</p>
-                {% endif %}
-            {% else %}
-                <p>Цена по запросу</p>
-            {% endif %}
-
-            {% if tour.description %}
-                <section>
-                    <h2>Описание тура</h2>
-                    {{ tour.description|linebreaks }}
-                </section>
-            {% endif %}
-        </article>
-    </main>
-</body>
-</html>
+        {% if tour.description %}
+            <section>
+                <h2>Описание тура</h2>
+                {{ tour.description|linebreaks }}
+            </section>
+        {% endif %}
+    </article>
+{% endblock %}

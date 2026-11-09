@@ -1,46 +1,112 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Туры — Millennium</title>
-</head>
-<body>
-    <main>
-        <h1>Туры</h1>
+{% extends "base.html" %}
 
+{% block title %}Туры — Millennium{% endblock %}
+
+{% block content %}
+    <h1>Туры</h1>
+    <form method="get" action="{% url 'catalog:tour_list' %}">
+        <div>
+            <label for="destination">Направление</label>
+            <select id="destination" name="destination">
+                <option value="">Все направления</option>
+
+                {% for destination in destinations %}
+                    <option
+                        value="{{ destination.slug }}"
+                        {% if selected_destination == destination.slug %}selected{% endif %}
+                    >
+                        {{ destination.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="meal">Питание</label>
+            <select id="meal" name="meal">
+                <option value="">Любое питание</option>
+
+                {% for value, label in meal_choices %}
+                    <option
+                        value="{{ value }}"
+                        {% if selected_meal == value %}selected{% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Показать туры</button>
+        <a href="{% url 'catalog:tour_list' %}">Сбросить фильтры</a>
+    </form>
+
+    <div class="tour-list">
         {% for tour in tours %}
-            <article>
+            <article class="tour-card">
+                {% with cover=tour.images.all.0 %}
+                    {% if cover %}
+                        <img
+                            src="{{ cover.image.url }}"
+                            alt="{{ cover.alt_text|default:tour.title }}"
+                            width="360"
+                            height="240"
+                            loading="lazy"
+                            style="max-width: 100%; object-fit: cover;"
+                        >
+                    {% else %}
+                        <p>Фото скоро появится</p>
+                    {% endif %}
+                {% endwith %}
+
                 <h2>
                     <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">
                         {{ tour.title }}
                     </a>
                 </h2>
+
                 <p>{{ tour.destination.name }}</p>
 
                 {% if tour.short_description %}
                     <p>{{ tour.short_description }}</p>
                 {% endif %}
+
+                {% if tour.price %}
+                    <p>
+                        {% if tour.price_from %}От {% endif %}
+                        {{ tour.price }} {{ tour.currency }}
+                    </p>
+                    <p>{{ tour.get_price_basis_display }}</p>
+
+                    {% if tour.price_details %}
+                        <p>{{ tour.price_details }}</p>
+                    {% endif %}
+                {% else %}
+                    <p>Цена по запросу</p>
+                {% endif %}
             </article>
         {% empty %}
-            <p>Пока нет доступных туров.</p>
+            <p>По вашему запросу туры не найдены.</p>
         {% endfor %}
+    </div>
 
-        {% if page_obj.has_other_pages %}
-            <nav aria-label="Страницы каталога">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
-                {% endif %}
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Страницы каталога">
+            {% if page_obj.has_previous %}
+                <a href="?destination={{ selected_destination|urlencode }}&amp;meal={{ selected_meal|urlencode }}&amp;page={{ page_obj.previous_page_number }}">
+                    Назад
+                </a>
+            {% endif %}
 
-                <span>
-                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
-                </span>
+            <span>
+                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+            </span>
 
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">Далее</a>
-                {% endif %}
-            </nav>
-        {% endif %}
-    </main>
-</body>
-</html>
+            {% if page_obj.has_next %}
+                <a href="?destination={{ selected_destination|urlencode }}&amp;meal={{ selected_meal|urlencode }}&amp;page={{ page_obj.next_page_number }}">
+                    Далее
+                </a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

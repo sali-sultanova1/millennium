@@ -3,9 +3,10 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
 from django.test import TestCase
+from django.urls import reverse
 
 from .models import Destination, Tour, TourImage
-from django.urls import reverse
+
 
 class TourValidationTests(TestCase):
     def setUp(self):
@@ -235,8 +236,75 @@ class CatalogViewsTests(TestCase):
         self.assertTrue(response.context["page_obj"].has_next())
 
         response = self.client.get(url, {"page": 2})
-        
+
         self.assertEqual(response.context["page_obj"].number, 2)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["tours"]), 1)
         self.assertFalse(response.context["page_obj"].has_next())
+
+
+class CatalogFilterTests(TestCase):
+    def setUp(self):
+        self.destination1 = Destination.objects.create(name="Китай", slug="china", is_active=True)
+        self.destination2 = Destination.objects.create(name="Турция", slug="turkey", is_active=True)
+        self.tour1 = Tour.objects.create(destination=self.destination1, title="Первый", slug="test-tour1", meal="BB", is_active=True)
+        self.tour2 = Tour.objects.create(destination=self.destination1, title="Второй", slug="test-tour2", meal="AI", is_active=True)
+        self.tour3 = Tour.objects.create(destination=self.destination2, title="Третий", slug="test-tour3", meal="BB", is_active=True)
+
+    def test_filter_by_destination(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"destination": "china"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context["tours"], [self.tour1, self.tour2])
+
+    def test_filter_by_meal(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"meal": "BB"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context["tours"], [self.tour1, self.tour3])
+
+    def test_filters_work_together(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"destination": "china", "meal": "BB"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context["tours"], [self.tour1])
+
+    def test_unknown_destination_returns_empty_list(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"destination": "missing"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context["tours"], [])
+
+    def test_unknown_meal_returns_empty_list(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"meal": "invalid"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context["tours"], [])
+
+    def test_inactive_destination_is_not_in_filter_choices(self):
+        self.destination1.is_active = False
+        self.destination1.save()
+
+        response = self.client.get(reverse("catalog:tour_list"), {"destination": "china"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(self.destination1, response.context["destinations"])
+        self.assertIn(self.destination2, response.context["destinations"])
+        self.assertCountEqual(response.context["tours"], [])
+
+    def test_filtered_catalog_pagination(self):
+        for i in range(12):
+            Tour.objects.create(destination=self.destination1, title=f"Дополнительный тур {i}", slug=f"extra-tour-{i}", is_active=True, meal="BB")
+
+        response = self.client.get(reverse("catalog:tour_list"), {"destination": "china", "meal": "BB", "page": 2})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["page_obj"].number, 2)
+        self.assertEqual(response.context["page_obj"].paginator.count, 13)
+        self.assertEqual(len(response.context["tours"]), 1)
+        self.assertFalse(response.context["page_obj"].has_next())
+        self.assertTrue(response.context["page_obj"].has_previous())
+
+        tour = response.context["tours"][0]
+        self.assertEqual(tour.destination_id, self.destination1.pk)
+        self.assertEqual(tour.meal, "BB")
