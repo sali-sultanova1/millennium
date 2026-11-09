@@ -5,7 +5,7 @@ from django.db.models.deletion import ProtectedError
 from django.test import TestCase
 
 from .models import Destination, Tour, TourImage
-
+from django.urls import reverse
 
 class TourValidationTests(TestCase):
     def setUp(self):
@@ -116,10 +116,14 @@ class TourValidationTests(TestCase):
                 self.tour.full_clean()
 
     def test_optional_trip_details_can_be_empty(self):
+        self.tour.departure_city = ""
         self.tour.departure_date = None
         self.tour.nights = None
+        self.tour.hotel_name = ""
         self.tour.hotel_stars = None
+        self.tour.resort = ""
         self.tour.meal = ""
+        self.tour.meal_details = ""
 
         self.tour.full_clean()
 
@@ -130,8 +134,7 @@ class CatalogRelationsTests(TestCase):
         self.tour = Tour.objects.create(destination=self.destination, title="Тестовый тур", slug="test-tour")
 
     def test_destination_with_tour_cannot_be_deleted(self):
-        with self.assertRaises(ProtectedError):
-            self.destination.delete()
+        self.assertRaises(ProtectedError, self.destination.delete)
 
         self.assertTrue(Destination.objects.filter(pk=self.destination.pk).exists())
         self.assertTrue(Tour.objects.filter(pk=self.tour.pk).exists())
@@ -144,10 +147,96 @@ class CatalogRelationsTests(TestCase):
         self.assertEqual(list(self.tour.images.all()), [first_image, second_image, last_image])
 
     def test_deleting_tour_deletes_image_records(self):
+        tour_pk = self.tour.pk
         image = TourImage.objects.create(tour=self.tour, image="tours/test-photo.jpg")
         image_pk = image.pk
 
         self.tour.delete()
 
+        self.assertFalse(Tour.objects.filter(pk=tour_pk).exists())
         self.assertFalse(TourImage.objects.filter(pk=image_pk).exists())
         self.assertTrue(Destination.objects.filter(pk=self.destination.pk).exists())
+
+
+class CatalogViewsTests(TestCase):
+    def setUp(self):
+        self.destination = Destination.objects.create(name="Китай", slug="china", is_active=True)
+        self.tour = Tour.objects.create(destination=self.destination, title="Тестовый тур", slug="test-tour", is_active=True)
+
+    def test_tour_list_shows_published_tour(self):
+        url = reverse("catalog:tour_list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "catalog/tour_list.html")
+        self.assertContains(response, self.tour.title)
+
+    def test_tour_list_hides_unpublished_tour(self):
+        self.tour.is_active = False
+        self.tour.save()
+        url = reverse("catalog:tour_list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, self.tour.title)
+
+    def test_tour_list_hides_inactive_destination(self):
+        self.destination.is_active = False
+        self.destination.save()
+        url = reverse("catalog:tour_list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, self.tour.title)
+
+    def test_tour_detail_shows_published_tour(self):
+        url = reverse("catalog:tour_detail", kwargs={"slug": self.tour.slug})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.tour.title)
+        self.assertTemplateUsed(response, "catalog/tour_detail.html")
+
+    def test_tour_detail_hides_unpublished_tour(self):
+        self.tour.is_active = False
+        self.tour.save()
+
+        url = reverse("catalog:tour_detail", kwargs={"slug": self.tour.slug})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_tour_detail_hides_inactive_destination(self):
+        self.destination.is_active = False
+        self.destination.save()
+
+        url = reverse("catalog:tour_detail", kwargs={"slug": self.tour.slug})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_tour_detail_returns_404_for_unknown_slug(self):
+        url = reverse("catalog:tour_detail", kwargs={"slug": "missing-tour"})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_tour_list_paginates_by_twelve(self):
+        for i in range(12):
+            Tour.objects.create(
+                destination=self.destination,
+                title=f"Дополнительный тур {i}",
+                slug=f"extra-tour-{i}",
+                is_active=True,
+            )
+        
+        url = reverse("catalog:tour_list")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["tours"]), 12)
+        self.assertTrue(response.context["page_obj"].has_next())
+
+        response = self.client.get(url, {"page": 2})
+        
+        self.assertEqual(response.context["page_obj"].number, 2)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["tours"]), 1)
+        self.assertFalse(response.context["page_obj"].has_next())

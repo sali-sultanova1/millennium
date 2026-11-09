@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Туры — Millennium</title>
+</head>
+<body>
+    <main>
+        <h1>Туры</h1>
+
+        {% for tour in tours %}
+            <article>
+                <h2>
+                    <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">
+                        {{ tour.title }}
+                    </a>
+                </h2>
+                <p>{{ tour.destination.name }}</p>
+
+                {% if tour.short_description %}
+                    <p>{{ tour.short_description }}</p>
+                {% endif %}
+            </article>
+        {% empty %}
+            <p>Пока нет доступных туров.</p>
+        {% endfor %}
+
+        {% if page_obj.has_other_pages %}
+            <nav aria-label="Страницы каталога">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+                {% endif %}
+
+                <span>
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">Далее</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </main>
+</body>
+</html>
