@@ -1,5 +1,7 @@
 from django.contrib import admin
+
 from catalog.models import Destination, Tour, TourImage
+
 
 class TourImageInline(admin.TabularInline):
     model = TourImage
