@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, render
 
 from .models import Destination, Tour
 
+
 def tour_list_view(request):
     tours = Tour.objects.filter(is_active=True, destination__is_active=True).select_related("destination").prefetch_related("images")
     destinations = Destination.objects.filter(is_active=True)

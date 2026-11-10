@@ -2,7 +2,6 @@ from django.urls import path
 
 from .views import tour_detail_view, tour_list_view
 
-
 app_name = "catalog"
 
 urlpatterns = [
