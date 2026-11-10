@@ -19,7 +19,7 @@ def tour_list_view(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    return render(request, "catalog/tour_list.html", {"tours": page_obj.object_list, "page_obj": page_obj, "destinations": destinations, "meal": selected_meal, "selected_destination": selected_destination, "selected_meal": selected_meal})
+    return render(request, "catalog/tour_list.html", {"tours": page_obj.object_list, "page_obj": page_obj, "destinations": destinations, "meal_choices": Tour.MealType.choices, "selected_destination": selected_destination, "selected_meal": selected_meal})
 
 def tour_detail_view(request, slug):
     tour = get_object_or_404(Tour.objects.filter(is_active=True, destination__is_active=True).select_related("destination").prefetch_related("images"), slug=slug)

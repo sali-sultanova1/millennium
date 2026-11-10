@@ -9,7 +9,7 @@ from catalog.models import Tour
 class Inquiry(models.Model):
     class Status(models.TextChoices):
         NEW = "new", "Новая"
-        IN_PROGRESS = "in_progrss", "В работе"
+        IN_PROGRESS = "in_progress", "В работе"
         CLOSED = "closed", "Закрыта"
 
     class Source(models.TextChoices):
