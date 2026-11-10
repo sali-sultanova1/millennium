@@ -85,6 +85,8 @@ class InquiryForm(forms.ModelForm):
             )
 
         if children_ages:
+            children_ages = children_ages.strip().rstrip(",").strip()
+            cleaned_data["children_ages"] = children_ages
             ages = children_ages.split(",")
 
             for age in ages:
@@ -93,7 +95,7 @@ class InquiryForm(forms.ModelForm):
                 if not age or not all(character in "0123456789" for character in age):
                     self.add_error(
                         "children_ages",
-                        "Укажите возраст цифрами через запятую, например: 3, 10.",
+                        "Укажите возраст цифрами через запятую, например: 3, 10",
                     )
                     break
 
