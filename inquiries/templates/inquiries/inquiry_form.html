@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Подобрать мне тур</h1>
+<p>Расскажите о желаемой поездке. Менеджер свяжется с вами и поможет подобрать варианты.</p>
+
+<form method="post" action="{% url 'inquiries:create' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Отправить заявку</button>
+</form>
+{% endblock %}
