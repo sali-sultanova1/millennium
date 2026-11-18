@@ -6,5 +6,6 @@ app_name = "inquiries"
 
 urlpatterns = [
     path("", inquiry_create_view, name="create"),
-    path("success/", inquiry_success_view, name="success")
+    path("success/", inquiry_success_view, name="success"),
+
 ]

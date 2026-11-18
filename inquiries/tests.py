@@ -12,6 +12,7 @@ from .models import InquiryTour, Inquiry
 from .services import create_inquiry
 
 from unittest.mock import patch
+from django.urls import reverse
 
 
 class InquiryFormTests(TestCase):
@@ -340,3 +341,62 @@ class InquiryServiceTests(TestCase):
         self.assertEqual(Inquiry.objects.count(), 0)
         self.assertEqual(InquiryTour.objects.count(), 0)
 
+
+class InquiryViewTests(TestCase):
+    def setUp(self):
+        self.url = reverse("inquiries:create")
+        self.data = {"name": "Анна", "phone": "+7 (900) 123-45-67", "contact_method": Inquiry.ContactMethod.WHATSAPP}
+
+    def test_get_displays_empty_form(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inquiries/inquiry_form.html")
+        self.assertFalse(response.context["form"].is_bound)
+        self.assertEqual(Inquiry.objects.count(), 0)
+
+    def test_valid_post_creates_inquiry(self):
+        response = self.client.post(self.url, self.data)
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+        self.assertEqual(Inquiry.objects.count(), 1)
+        
+        inquiry = Inquiry.objects.get()
+
+        self.assertEqual(inquiry.name, self.data["name"])
+        self.assertEqual(inquiry.phone, self.data["phone"])
+        self.assertEqual(inquiry.contact_method, self.data["contact_method"])
+        self.assertEqual(inquiry.source, Inquiry.Source.SELECTION)
+        self.assertEqual(inquiry.status, Inquiry.Status.NEW)
+        self.assertEqual(inquiry.selected_tours.count(), 0)
+
+    def test_invalid_post_does_not_create_inquiry(self):
+        self.data["phone"] = "abcdefg"
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inquiries/inquiry_form.html")
+        self.assertIn("phone", response.context["form"].errors)
+        self.assertEqual(Inquiry.objects.count(), 0)
+        self.assertEqual(response.context["form"]["name"].value(), self.data["name"])
+
+    def test_post_cannot_override_source_or_status(self):
+        self.data["source"] = Inquiry.Source.FAVORITES
+        self.data["status"] = Inquiry.Status.CLOSED
+
+        response = self.client.post(self.url, self.data)
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+
+        inquiry = Inquiry.objects.get()
+        self.assertEqual(inquiry.source, Inquiry.Source.SELECTION)
+        self.assertEqual(inquiry.status, Inquiry.Status.NEW)
+
+    def test_success_page_does_not_create_inquiry(self):
+        url = reverse("inquiries:success")
+
+        for _ in range(2):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertTemplateUsed(response, "inquiries/inquiry_success.html")
+
+        self.assertEqual(Inquiry.objects.count(), 0)
