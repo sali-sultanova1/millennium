@@ -70,6 +70,16 @@
             <p>Цена по запросу</p>
         {% endif %}
 
+        <a href="{% url 'inquiries:tour_create' slug=tour.slug %}">
+            Оставить заявку
+        </a>
+
+        <button type="button"
+                data-favorite-id="{{ tour.pk }}"
+                aria-pressed="false">
+            В избранное
+        </button>
+
         {% if tour.description %}
             <section>
                 <h2>Описание тура</h2>

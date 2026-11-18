@@ -14,6 +14,8 @@ from .services import create_inquiry
 from unittest.mock import patch
 from django.urls import reverse
 
+from datetime import date
+
 
 class InquiryFormTests(TestCase):
     def setUp(self):
@@ -400,3 +402,44 @@ class InquiryViewTests(TestCase):
             self.assertTemplateUsed(response, "inquiries/inquiry_success.html")
 
         self.assertEqual(Inquiry.objects.count(), 0)
+
+
+class TourInquiryViewTests(TestCase):
+    def setUp(self):
+        self.destination = Destination.objects.create(name="Турция", slug="turkey", is_active=True)
+        self.tour = Tour.objects.create(destination=self.destination, title="Неделя в Анталье", slug="week-in-antalya", resort="Анталья", hotel_name="Test Hotel", short_description="Тур на семь ночей", description="Пляжный отдых в Анталье.", departure_city="Махачкала", departure_date=date(2027, 6, 15), nights=7, hotel_stars=4, meal="AI", price=Decimal("55000.00"), currency="RUB", price_basis=Tour.PriceBasis.PER_PERSON, is_active=True)
+        self.url = reverse("inquiries:tour_create", kwargs={"slug": self.tour.slug})
+        self.data = {"name": "Анна", "phone": "+7 (900) 123-45-67", "contact_method": Inquiry.ContactMethod.WHATSAPP}
+
+    def test_get_displays_selected_tour(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, self.tour.title, status_code=200)
+        self.assertTemplateUsed(response, "inquiries/inquiry_form.html")
+        self.assertEqual(response.context["tour"], self.tour)
+
+    def test_valid_post_creates_tour_inquiry(self):
+        response = self.client.post(self.url, self.data)
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+        inquiry = Inquiry.objects.get()
+        self.assertEqual(inquiry.source, Inquiry.Source.TOUR)
+
+        item = inquiry.selected_tours.get()
+        self.assertEqual(item.tour_id, self.tour.pk)
+
+    def test_inactive_tour_returns_404(self):
+        self.tour.is_active = False
+        self.tour.save(update_fields=["is_active"])
+
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.assertEqual(self.client.post(self.url, self.data).status_code, 404)
+        self.assertFalse(Inquiry.objects.exists())
+
+    def test_tour_in_inactive_destination_returns_404(self):
+        self.destination.is_active = False
+        self.destination.save(update_fields=["is_active"])
+
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.assertEqual(self.client.post(self.url, self.data).status_code, 404)
+        self.assertFalse(Inquiry.objects.exists())

@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Подобрать мне тур</h1>
-<p>Расскажите о желаемой поездке. Менеджер свяжется с вами и поможет подобрать варианты.</p>
+{% if tour %}
+    <h1>Заявка на тур</h1>
+    <p>Выбранный тур: <strong>{{ tour.title }}</strong></p>
+{% else %}
+    <h1>Подобрать мне тур</h1>
+    <p>Расскажите о желаемой поездке. Менеджер поможет подобрать варианты.</p>
+{% endif %}
 
 <form method="post" action="{% url 'inquiries:create' %}">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Отправить заявку</button>
+    <a href="{% url 'inquiries:tour_create' slug=tour.slug %}">Оставить заявку</a>
 </form>
 {% endblock %}

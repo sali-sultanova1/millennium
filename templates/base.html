@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -22,5 +23,7 @@
     <footer>
         <p>© {% now "Y" %} Millennium — туристическое агентство</p>
     </footer>
+
+    <script src="{% static 'catalog/favorites.js' %}" defer></script>
 </body>
 </html>
