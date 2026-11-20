@@ -1,0 +1,143 @@
+:root {
+    --page-bg: #f8f7f3;
+    --surface: #fff;
+    --text: #23342e;
+    --accent: #27594b;
+    --border: #dce4de;
+    --radius: 1rem;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--text);
+    font: 1rem / 1.55 system-ui, sans-serif;
+}
+
+body > header,
+body > main,
+body > footer {
+    width: min(72rem, calc(100% - 2rem));
+    margin-inline: auto;
+}
+
+body > header,
+header nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+}
+
+body > header {
+    justify-content: space-between;
+    padding-block: 1rem;
+}
+
+body > header > a {
+    font-size: 1.35rem;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+body > footer {
+    margin-top: 2rem;
+    padding-block: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+a {
+    color: var(--accent);
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+}
+
+button,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.home-hero {
+    padding: clamp(1.25rem, 5vw, 4rem);
+    border-radius: var(--radius);
+    background: #e8f0eb;
+}
+
+.home-hero h1 {
+    max-width: 20ch;
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+}
+
+.home-hero form {
+    display: grid;
+    gap: 0.6rem;
+    max-width: 26rem;
+    margin-block: 1.25rem;
+}
+
+.home-hero select,
+.home-hero button,
+.tour-card button {
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    background: var(--surface);
+    color: var(--text);
+}
+
+.home-hero button,
+.tour-card button[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+}
+
+.tour-grid,
+.tour-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 1rem;
+    margin-block: 1.5rem;
+}
+
+.tour-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.tour-card > img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: 0.65rem;
+}
+
+.tour-card :is(h2, h3, p) {
+    margin: 0;
+}
+
+.tour-card button {
+    align-self: flex-start;
+    margin-top: auto;
+}
