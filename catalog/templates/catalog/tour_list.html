@@ -43,7 +43,7 @@
 
     <div class="tour-list">
         {% for tour in tours %}
-            {% include "catalog/_tour_card.html" with tour=tour %}
+            {% include "catalog/tour_card.html" with tour=tour %}
         {% empty %}
             <p>По вашему запросу туры не найдены.</p>
         {% endfor %}

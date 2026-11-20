@@ -21,7 +21,7 @@
 
 <div class="tour-grid">
     {% for tour in tours %}
-        {% include "catalog/_tour_card.html" with tour=tour heading_tag="h3" %}
+        {% include "catalog/tour_card.html" with tour=tour heading_tag="h3" %}
     {% empty %}
         <p>Сейчас в каталоге нет опубликованных туров.</p>
     {% endfor %}

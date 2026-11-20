@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import inquiry_create_view, inquiry_success_view, tour_inquiry_create_view, favorites_inquiry_create_view
+from .views import (
+    favorites_inquiry_create_view,
+    inquiry_create_view,
+    inquiry_success_view,
+    tour_inquiry_create_view,
+)
 
 app_name = "inquiries"
 

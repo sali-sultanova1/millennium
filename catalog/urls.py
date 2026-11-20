@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import tour_detail_view, tour_list_view, favorites_items_view, favorites_view
+from .views import (
+    favorites_items_view,
+    favorites_view,
+    tour_detail_view,
+    tour_list_view,
+)
 
 app_name = "catalog"
 

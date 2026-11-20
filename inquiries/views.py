@@ -1,11 +1,11 @@
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods
+
+from catalog.models import Tour
 
 from .forms import InquiryForm
 from .models import Inquiry
 from .services import create_inquiry
-from catalog.models import Tour
-
-from django.views.decorators.http import require_http_methods
 
 
 def inquiry_create_view(request):

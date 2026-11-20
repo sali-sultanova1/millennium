@@ -1,20 +1,16 @@
-from django.test import TestCase
-
-from .forms import InquiryForm
-
+from datetime import date
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.test import TestCase
+from django.urls import reverse
 
 from catalog.models import Destination, Tour
 
-from .models import InquiryTour, Inquiry
+from .forms import InquiryForm
+from .models import Inquiry, InquiryTour
 from .services import create_inquiry
-
-from unittest.mock import patch
-from django.urls import reverse
-
-from datetime import date
 
 
 class InquiryFormTests(TestCase):
