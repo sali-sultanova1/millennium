@@ -1,0 +1,46 @@
+<article class="tour-card">
+    {% with cover=tour.images.all.0 %}
+        {% if cover %}
+            <img
+                src="{{ cover.image.url }}"
+                alt="{{ cover.alt_text|default:tour.title }}"
+                width="360"
+                height="240"
+                loading="lazy"
+                style="max-width: 100%; object-fit: cover;"
+            >
+        {% else %}
+            <p>Фото скоро появится</p>
+        {% endif %}
+    {% endwith %}
+
+    <{{ heading_tag|default:"h2" }}>
+        <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">
+            {{ tour.title }}
+        </a>
+    </{{ heading_tag|default:"h2" }}>
+
+    <p>{{ tour.destination.name }}</p>
+
+    {% if tour.short_description %}
+        <p>{{ tour.short_description }}</p>
+    {% endif %}
+
+    {% if tour.price %}
+        <p>
+            {% if tour.price_from %}От {% endif %}
+            {{ tour.price }} {{ tour.currency }}
+        </p>
+        <p>{{ tour.get_price_basis_display }}</p>
+
+        {% if tour.price_details %}
+            <p>{{ tour.price_details }}</p>
+        {% endif %}
+    {% else %}
+        <p>Цена по запросу</p>
+    {% endif %}
+
+    <button type="button" data-favorite-id="{{ tour.pk }}" aria-pressed="false">
+        В избранное
+    </button>
+</article>

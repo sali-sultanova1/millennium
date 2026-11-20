@@ -19,23 +19,11 @@
     <a href="{% url 'inquiries:create' %}">Подобрать мне тур</a>
 </section>
 
-<section class="home-tours">
-    <h2>Туры из каталога</h2>
-
+<div class="tour-grid">
     {% for tour in tours %}
-        <article class="tour-card">
-            <p>{{ tour.destination.name }}</p>
-            <h3>
-                <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">{{ tour.title }}</a>
-            </h3>
-            <button type="button" data-favorite-id="{{ tour.pk }}" aria-pressed="false">
-                В избранное
-            </button>
-        </article>
+        {% include "catalog/_tour_card.html" with tour=tour heading_tag="h3" %}
     {% empty %}
         <p>Сейчас в каталоге нет опубликованных туров.</p>
     {% endfor %}
-
-    <a href="{% url 'catalog:tour_list' %}">Смотреть все туры</a>
-</section>
+</div>
 {% endblock %}
