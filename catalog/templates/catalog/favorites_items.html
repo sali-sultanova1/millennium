@@ -1,0 +1,23 @@
+{% for tour in tours %}
+    <article data-favorite-card>
+        <h2>
+            <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">
+                {{ tour.title }}
+            </a>
+        </h2>
+        {% if tour.price %}
+            <p>{{ tour.price }} {{ tour.currency }}</p>
+        {% endif %}
+        <label>
+            <input type="checkbox" name="ids" value="{{ tour.pk }}">
+            Выбрать тур «{{ tour.title }}»
+        </label>
+        {% if not selection_mode %}
+            <button type="button" data-remove-favorite-id="{{ tour.pk }}">
+                Убрать из избранного
+            </button>
+        {% endif %}
+    </article>
+{% empty %}
+    <p>В избранном пока нет доступных туров.</p>
+{% endfor %}

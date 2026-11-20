@@ -26,4 +26,22 @@ def tour_detail_view(request, slug):
     tour = get_object_or_404(Tour.objects.filter(is_active=True, destination__is_active=True).select_related("destination").prefetch_related("images"), slug=slug)
 
     return render(request, "catalog/tour_detail.html", {"tour": tour})
-    
+
+def favorites_view(request):
+    return render(request, "catalog/favorites.html")
+
+def favorites_items_view(request):
+    ids = []
+
+    for raw_id in request.GET.getlist("ids"):
+        try:
+            tour_id = int(raw_id)
+        except ValueError:
+            continue
+
+        if 0 < tour_id <= 2**63 - 1:
+            ids.append(tour_id)
+
+    tours = Tour.objects.filter(pk__in=ids, is_active=True, destination__is_active=True)
+
+    return render(request, "catalog/favorites_items.html", {"tours": tours, "selection_mode": request.GET.get("mode") == "selection",})

@@ -443,3 +443,96 @@ class TourInquiryViewTests(TestCase):
         self.assertEqual(self.client.get(self.url).status_code, 404)
         self.assertEqual(self.client.post(self.url, self.data).status_code, 404)
         self.assertFalse(Inquiry.objects.exists())
+
+class FavoritesInquiryViewTests(TestCase):
+    def setUp(self):
+        destination = Destination.objects.create(name="Китай", slug="china", is_active=True)
+        self.first_tour = Tour.objects.create(destination=destination, title="Путешествие в Пекин", slug="beijing-trip", is_active=True)
+        self.second_tour = Tour.objects.create(destination=destination, title="Путешествие в Шанхай", slug="shanghai-trip", is_active=True)
+        self.third_tour = Tour.objects.create(destination=destination, title="Путешествие в Гуанчжоу", slug="guangzhou-trip", is_active=True)
+
+        self.url = reverse("inquiries:favorites_create")
+        self.selected_ids = [self.first_tour.pk, self.third_tour.pk]
+        self.data = {"name": "Анна", "phone": "+7 (900) 123-45-67", "contact_method": Inquiry.ContactMethod.WHATSAPP, "ids": self.selected_ids}
+
+    def test_get_displays_selected_tours(self):
+        response = self.client.get(self.url, {"ids": self.selected_ids})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inquiries/inquiry_form.html")
+        self.assertCountEqual(response.context["selected_tours"], [self.first_tour, self.third_tour])
+        self.assertContains(response, self.first_tour.title)
+        self.assertContains(response, self.third_tour.title)
+        self.assertNotContains(response, self.second_tour.title)
+        self.assertEqual(Inquiry.objects.count(), 0)
+
+    def test_valid_post_creates_one_inquiry_with_selected_tours(self):
+        response = self.client.post(self.url, self.data)
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+
+        inquiry = Inquiry.objects.get()
+        self.assertEqual(inquiry.source, Inquiry.Source.FAVORITES)
+
+        saved_ids = inquiry.selected_tours.values_list("tour_id", flat=True)
+        self.assertCountEqual(saved_ids, self.selected_ids)
+
+    def test_invalid_phone_preserves_selected_tours(self):
+        self.data["phone"] = "abcdefg"
+        response = self.client.post(self.url, self.data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("phone", response.context["form"].errors)
+        self.assertCountEqual(response.context["selected_tours"], [self.first_tour, self.third_tour])
+        self.assertContains(response, f'<input type="hidden" name="ids" value="{self.first_tour.pk}">', html=True)
+        self.assertContains(response, f'<input type="hidden" name="ids" value="{self.third_tour.pk}">', html=True)
+        self.assertEqual(Inquiry.objects.count(), 0)
+
+    def test_tour_hidden_after_get_prevents_inquiry_creation(self):
+        response = self.client.get(self.url, {"ids": self.selected_ids})
+        self.assertEqual(response.status_code, 200)
+
+        self.third_tour.is_active = False
+        self.third_tour.save()
+
+        response = self.client.post(self.url, self.data)
+
+        self.assertNotEqual(response.headers.get("Location"), reverse("inquiries:success"))
+        self.assertEqual(Inquiry.objects.count(), 0)
+
+
+class SelectionInquiryViewTests(TestCase):
+    def setUp(self):
+        destination = Destination.objects.create(name="Китай", slug="china", is_active=True)
+        self.first_tour = Tour.objects.create(destination=destination, title="Пекин", slug="beijing", is_active=True)
+        self.second_tour = Tour.objects.create(destination=destination, title="Шанхай", slug="shanghai", is_active=True)
+        self.url = reverse("inquiries:create")
+        self.data = {"name": "Анна", "phone": "+7 (900) 123-45-67", "contact_method": Inquiry.ContactMethod.WHATSAPP}
+
+    def test_post_without_ids_creates_selection_inquiry_without_tours(self):
+        response = self.client.post(self.url, self.data)
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+        inquiry = Inquiry.objects.get()
+        self.assertEqual(inquiry.source, Inquiry.Source.SELECTION)
+        self.assertEqual(inquiry.selected_tours.count(), 0)
+
+    def test_post_with_two_active_tours_attaches_both_to_one_inquiry(self):
+        selected_ids = [self.first_tour.pk, self.second_tour.pk]
+        response = self.client.post(self.url, {**self.data, "ids": selected_ids})
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+        inquiry = Inquiry.objects.get()
+        self.assertEqual(inquiry.source, Inquiry.Source.SELECTION)
+        self.assertCountEqual(inquiry.selected_tours.values_list("tour_id", flat=True), selected_ids)
+
+    def test_post_with_hidden_tour_returns_form_error_without_creating_inquiry(self):
+        self.second_tour.is_active = False
+        self.second_tour.save(update_fields=["is_active"])
+        selected_ids = [self.first_tour.pk, self.second_tour.pk]
+
+        response = self.client.post(self.url, {**self.data, "ids": selected_ids})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].non_field_errors())
+        self.assertEqual(Inquiry.objects.count(), 0)

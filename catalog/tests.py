@@ -7,7 +7,6 @@ from django.urls import reverse
 
 from .models import Destination, Tour, TourImage
 
-
 class TourValidationTests(TestCase):
     def setUp(self):
         self.destination = Destination.objects.create(name="Китай", slug="china")

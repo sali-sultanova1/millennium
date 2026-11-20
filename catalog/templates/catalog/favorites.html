@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Избранное</h1>
+
+    <form id="favorites-selection" method="get" action="{% url 'inquiries:favorites_create' %}">
+        <button type="button" id="select-all-favorites">Выбрать все</button>
+        <button type="button" id="clear-favorites-selection">Снять выбор</button>
+
+        <div id="favorites-list"
+             data-items-url="{% url 'catalog:favorites_items' %}"
+             aria-live="polite"></div>
+
+        <p id="favorites-selection-error" role="status"></p>
+        <button type="submit">Обсудить выбранные туры</button>
+    </form>
+{% endblock %}
