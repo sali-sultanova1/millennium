@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="home-hero">
+    <h1>Найдите тур для следующего путешествия</h1>
+    <p>Посмотрите предложения Millennium или расскажите менеджеру, куда хотите поехать.</p>
+
+    <form method="get" action="{% url 'catalog:tour_list' %}">
+        <label for="home-destination">Куда хотите поехать?</label>
+        <select id="home-destination" name="destination">
+            <option value="">Все направления</option>
+            {% for destination in destinations %}
+                <option value="{{ destination.slug }}">{{ destination.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Найти туры</button>
+    </form>
+
+    <a href="{% url 'inquiries:create' %}">Подобрать мне тур</a>
+</section>
+
+<section class="home-tours">
+    <h2>Туры из каталога</h2>
+
+    {% for tour in tours %}
+        <article class="tour-card">
+            <p>{{ tour.destination.name }}</p>
+            <h3>
+                <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">{{ tour.title }}</a>
+            </h3>
+            <button type="button" data-favorite-id="{{ tour.pk }}" aria-pressed="false">
+                В избранное
+            </button>
+        </article>
+    {% empty %}
+        <p>Сейчас в каталоге нет опубликованных туров.</p>
+    {% endfor %}
+
+    <a href="{% url 'catalog:tour_list' %}">Смотреть все туры</a>
+</section>
+{% endblock %}

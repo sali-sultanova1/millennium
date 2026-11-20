@@ -45,3 +45,10 @@ def favorites_items_view(request):
     tours = Tour.objects.filter(pk__in=ids, is_active=True, destination__is_active=True)
 
     return render(request, "catalog/favorites_items.html", {"tours": tours, "selection_mode": request.GET.get("mode") == "selection",})
+
+def home_view(request):
+    destinations = Destination.objects.filter(is_active=True).order_by("sort_order", "name")
+
+    tours = (Tour.objects.filter(is_active=True, destination__is_active=True).select_related("destination").order_by("-pk")[:6])
+
+    return render(request, "catalog/home.html", {"destinations": destinations, "tours": tours})

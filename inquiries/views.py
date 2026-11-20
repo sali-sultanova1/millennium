@@ -83,12 +83,12 @@ def favorites_inquiry_create_view(request):
         or any(not (0 < tour_id <= 2**63 - 1) for tour_id in ids)
         or len(ids) != len(set(ids))
     ):
-        return render(request, "inquiries/form.html", {"selection_error": "Выберите хотя бы один тур в избранном и повторите попытку."}, status=400)
+        return render(request, "inquiries/inquiry_form.html", {"selection_error": "Выберите хотя бы один тур в избранном и повторите попытку."}, status=400)
 
     selected_tours = list(Tour.objects.filter(pk__in=ids, is_active=True, destination__is_active=True))
 
     if len(selected_tours) != len(ids):
-        return render(request, "inquiries/form.html", {"selection_error": "Один или несколько выбранных туров больше недоступны."}, status=400)
+        return render(request, "inquiries/inquiry_form.html", {"selection_error": "Один или несколько выбранных туров больше недоступны."}, status=400)
 
     if request.method == "POST":
         form = InquiryForm(request.POST)
@@ -99,4 +99,4 @@ def favorites_inquiry_create_view(request):
     else:
         form = InquiryForm()
 
-    return render(request, "inquiries/form.html", {"form": form, "selected_tours": selected_tours})
+    return render(request, "inquiries/inquiry_form.html", {"form": form, "selected_tours": selected_tours})
