@@ -23,6 +23,7 @@
                 <a href="{% url 'home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Главная</a>
                 <a href="{% url 'catalog:tour_list' %}"{% if request.resolver_match.url_name == 'tour_list' %} aria-current="page"{% elif request.resolver_match.url_name == 'tour_detail' %} aria-current="location"{% endif %}>Каталог туров</a>
                 <a href="{% url 'home' %}#directions">Направления</a>
+                <a href="{% url 'pages:contacts' %}"{% if request.resolver_match.view_name == 'pages:contacts' %} aria-current="page"{% endif %}>Контакты</a>
             </nav>
             <div class="masthead-actions">
                 <a class="saved-link" href="{% url 'catalog:favorites' %}" aria-label="Избранное" title="Избранное"{% if request.resolver_match.url_name == 'favorites' %} aria-current="page"{% endif %}>

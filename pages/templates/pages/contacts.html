@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Контакты — Миллениум{% endblock %}
+
+{% block content %}
+<header class="page-banner">
+    <div class="wrap">
+        <h1>Контакты</h1>
+        <p>Оставьте заявку, и менеджер свяжется с вами, чтобы обсудить поездку.</p>
+        <a class="btn primary" href="{% url 'inquiries:create' %}">Подобрать тур</a>
+    </div>
+</header>
+{% endblock %}

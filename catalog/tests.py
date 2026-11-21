@@ -252,36 +252,29 @@ class CatalogFilterTests(TestCase):
         self.tour2 = Tour.objects.create(destination=self.destination1, title="Второй", slug="test-tour2", meal="AI", departure_date=date(2026, 12, 15), is_active=True)
         self.tour3 = Tour.objects.create(destination=self.destination2, title="Третий", slug="test-tour3", meal="BB", departure_date=date(2026, 12, 20), is_active=True)
     
-        def test_filter_by_departure_date(self):
-            url = reverse("catalog:tour_list")
-            cases = [
-                ({"departure_from": "2026-12-15"}, [self.tour2, self.tour3]),
-                ({"departure_to": "2026-12-15"}, [self.tour1, self.tour2]),
-                (
-                    {"departure_from": "2026-12-10", "departure_to": "2026-12-15"},
-                    [self.tour1, self.tour2],
-                ),
-                (
-                    {"departure_from": "2026-12-15", "departure_to": "2026-12-15"},
-                    [self.tour2],
-                ),
-            ]
+    def test_filter_by_departure_date(self):
+        url = reverse("catalog:tour_list")
+        cases = [
+            ({"departure_from": "2026-12-15"}, [self.tour2, self.tour3]),
+            ({"departure_to": "2026-12-15"}, [self.tour1, self.tour2]),
+            ({"departure_from": "2026-12-10", "departure_to": "2026-12-15"}, [self.tour1, self.tour2]),
+            ({"departure_from": "2026-12-15", "departure_to": "2026-12-15"}, [self.tour2])]
 
-            for params, expected_tours in cases:
-                with self.subTest(params=params):
-                    response = self.client.get(url, params)
-                    self.assertEqual(response.status_code, 200)
-                    self.assertCountEqual(response.context["tours"], expected_tours)
+        for params, expected_tours in cases:
+            with self.subTest(params=params):
+                response = self.client.get(url, params)
+                self.assertEqual(response.status_code, 200)
+                self.assertCountEqual(response.context["tours"], expected_tours)
 
-        def test_reversed_departure_range_shows_error(self):
-            response = self.client.get(
-                reverse("catalog:tour_list"),
-                {"departure_from": "2026-12-20", "departure_to": "2026-12-10"},
-            )
+    def test_reversed_departure_range_shows_error(self):
+        response = self.client.get(
+            reverse("catalog:tour_list"),
+            {"departure_from": "2026-12-20", "departure_to": "2026-12-10"},
+        )
 
-            self.assertEqual(response.status_code, 200)
-            self.assertIn("departure_to", response.context["filter_form"].errors)
-            self.assertContains(response, "data-has-errors")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("departure_to", response.context["filter_form"].errors)
+        self.assertContains(response, "data-has-errors")
     
     def test_filter_by_destination(self):
         response = self.client.get(reverse("catalog:tour_list"), {"destination": "china"})

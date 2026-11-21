@@ -10,6 +10,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("tours/", include("catalog.urls")),
     path("inquiries/", include("inquiries.urls")),
+    path("", include("pages.urls")),
 ]
 
 if settings.DEBUG:
