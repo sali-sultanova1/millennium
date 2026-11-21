@@ -1,0 +1,10 @@
+<div class="price-block">
+    {% if tour.price %}
+        <p class="amount">{% if tour.price_from %}<small>от</small> {% endif %}{{ tour.price|floatformat:"-2g" }}&nbsp;{% if tour.currency == "RUB" %}₽{% else %}{{ tour.currency }}{% endif %}</p>
+        {% if tour.price_basis == "total" and compact %}<p class="basis">За всех туристов{% if tour.price_details %} · {{ tour.price_details }}{% endif %}</p>
+        {% else %}
+            {% if tour.price_basis %}<p class="basis">{{ tour.get_price_basis_display }}</p>{% endif %}
+            {% if tour.price_details %}<p class="basis">{{ tour.price_details }}</p>{% endif %}
+        {% endif %}
+    {% else %}<p class="amount on-request">Цена по запросу</p>{% endif %}
+</div>

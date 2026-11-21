@@ -24,6 +24,20 @@ class InquiryForm(forms.ModelForm):
             "contact_method",
         )
 
+        widgets = {
+            "name": forms.TextInput(attrs={"autocomplete": "name"}),
+            "phone": forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}),
+            "departure_date_from": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+            "departure_date_to": forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"}),
+            "comment": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, prompt in (("contact_method", "Выберите способ связи"), ("budget_currency", "Выберите валюту")):
+            field = self.fields[name]
+            field.choices = [("", prompt), *((value, label) for value, label in field.choices if value != "")]
+
     def clean_phone(self):
         phone = self.cleaned_data["phone"]
         allowed_characters = "0123456789+() -"

@@ -1,46 +1,36 @@
+{% load catalog_display %}
 <article class="tour-card">
-    {% with cover=tour.images.all.0 %}
-        {% if cover %}
-            <img
-                src="{{ cover.image.url }}"
-                alt="{{ cover.alt_text|default:tour.title }}"
-                width="360"
-                height="240"
-                loading="lazy"
-                style="max-width: 100%; object-fit: cover;"
-            >
-        {% else %}
-            <p>Фото скоро появится</p>
-        {% endif %}
-    {% endwith %}
-
-    <{{ heading_tag|default:"h2" }}>
-        <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">
-            {{ tour.title }}
+    {% url 'catalog:tour_detail' slug=tour.slug as tour_url %}
+    {% with cover=tour.images.all.0 landscape=tour.destination|destination_photo small=tour.destination|destination_photo:"small" %}
+    <div class="card-media{% if not cover and not landscape %} type-tile{% endif %}">
+        <a href="{{ tour_url }}" class="cover-link" tabindex="-1" aria-hidden="true">
+            {% if cover %}<img src="{{ cover.image.url }}" alt="" width="720" height="420" loading="lazy" decoding="async">
+            {% elif landscape %}<img src="{{ small }}" srcset="{{ small }} 480w, {{ landscape }} 1120w" sizes="(max-width: 640px) 92vw, (max-width: 960px) 47vw, 400px" alt="" width="720" height="420" loading="lazy" decoding="async">
+            {% else %}<span class="type-title">{{ tour.destination.name }}</span>{% endif %}
         </a>
-    </{{ heading_tag|default:"h2" }}>
-
-    <p>{{ tour.destination.name }}</p>
-
-    {% if tour.short_description %}
-        <p>{{ tour.short_description }}</p>
-    {% endif %}
-
-    {% if tour.price %}
-        <p>
-            {% if tour.price_from %}От {% endif %}
-            {{ tour.price }} {{ tour.currency }}
-        </p>
-        <p>{{ tour.get_price_basis_display }}</p>
-
-        {% if tour.price_details %}
-            <p>{{ tour.price_details }}</p>
+        {% if not cover and landscape %}<span class="photo-note">Фото направления</span>{% endif %}
+        <button type="button" class="heart-btn" data-favorite-id="{{ tour.pk }}" aria-label="Избранное: {{ tour.title }}" title="В избранное" aria-pressed="false"><span class="icon i-heart" aria-hidden="true"></span></button>
+    </div>
+    {% endwith %}
+    <div class="card-copy">
+        <p class="location"><span class="icon i-pin" aria-hidden="true"></span><span>{{ tour.destination.name }}{% if tour.resort %}, {{ tour.resort }}{% endif %}</span></p>
+        {% if compact_heading %}<h3><a href="{{ tour_url }}">{{ tour.title }}</a></h3>{% else %}<h2><a href="{{ tour_url }}">{{ tour.title }}</a></h2>{% endif %}
+        {% if tour.hotel_stars or tour.hotel_name and tour.hotel_name != tour.title %}
+        <p class="hotel-meta">{% if tour.hotel_name and tour.hotel_name != tour.title %}{{ tour.hotel_name }}{% endif %}{% if tour.hotel_stars %} <span aria-label="Категория отеля {{ tour.hotel_stars }}">{{ tour.hotel_stars }} ★</span>{% endif %}</p>
         {% endif %}
-    {% else %}
-        <p>Цена по запросу</p>
-    {% endif %}
-
-    <button type="button" data-favorite-id="{{ tour.pk }}" aria-pressed="false">
-        В избранное
-    </button>
+        {% if tour.departure_date or tour.nights or tour.meal or tour.departure_city %}
+        <ul class="card-facts">
+            {% if tour.departure_date %}<li><span class="icon i-calendar" aria-hidden="true"></span><span>Вылет {{ tour.departure_date|date:"j E Y" }}</span></li>{% endif %}
+            {% if tour.nights or tour.meal %}<li><span class="icon i-clock" aria-hidden="true"></span><span>{% if tour.nights %}{{ tour.nights|nights_label }}{% endif %}{% if tour.nights and tour.meal %} · {% endif %}{% if tour.meal %}{{ tour.get_meal_display }}{% endif %}</span></li>{% endif %}
+            {% if tour.departure_city %}<li><span class="icon i-plane" aria-hidden="true"></span><span><span class="sr-only">Город вылета </span>{{ tour.departure_city }}</span></li>{% endif %}
+        </ul>
+        {% endif %}
+        <div class="card-foot">
+            {% include "catalog/partials/price.html" with tour=tour compact=True only %}
+            <div class="card-actions">
+                <a class="btn secondary" href="{{ tour_url }}" aria-label="Подробнее о туре «{{ tour.title }}»">Подробнее</a>
+                <a class="btn primary" href="{% url 'inquiries:tour_create' slug=tour.slug %}" aria-label="Оставить заявку на тур «{{ tour.title }}»">Оставить заявку</a>
+            </div>
+        </div>
+    </div>
 </article>

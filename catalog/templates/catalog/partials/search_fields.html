@@ -1,0 +1,31 @@
+{% load catalog_display %}
+<div class="control">
+    <label for="{{ prefix }}-city">Город вылета</label>
+    <select id="{{ prefix }}-city" name="city">
+        <option value="">Любой город</option>
+        {% for city in departure_cities %}<option value="{{ city }}"{% if city == selected_city %} selected{% endif %}>{{ city }}</option>{% endfor %}
+    </select>
+</div>
+<div class="control">
+    <label for="{{ prefix }}-destination">Направление</label>
+    <select id="{{ prefix }}-destination" name="destination">
+        <option value="">Любое</option>
+        {% for item in destinations %}<option value="{{ item.slug }}"{% if item.slug == selected_destination %} selected{% endif %}>{{ item.name }}</option>{% endfor %}
+    </select>
+</div>
+{% if with_options %}
+<div class="control">
+    <label for="{{ prefix }}-nights">Длительность</label>
+    <select id="{{ prefix }}-nights" name="nights">
+        <option value="">Любая</option>
+        {% for length in durations %}<option value="{{ length }}">{{ length|nights_label }}</option>{% endfor %}
+    </select>
+</div>
+<div class="control">
+    <label for="{{ prefix }}-meal">Питание</label>
+    <select id="{{ prefix }}-meal" name="meal">
+        <option value="">Любое</option>
+        {% for value, label in meal_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+    </select>
+</div>
+{% endif %}

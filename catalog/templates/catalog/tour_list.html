@@ -1,71 +1,73 @@
 {% extends "base.html" %}
-
-{% block title %}Туры — Millennium{% endblock %}
-
+{% load catalog_display %}
+{% block title %}Каталог туров — Миллениум{% endblock %}
 {% block content %}
-    <h1>Туры</h1>
-    <form method="get" action="{% url 'catalog:tour_list' %}">
-        <div>
-            <label for="destination">Направление</label>
-            <select id="destination" name="destination">
-                <option value="">Все направления</option>
-
-                {% for destination in destinations %}
-                    <option
-                        value="{{ destination.slug }}"
-                        {% if selected_destination == destination.slug %}selected{% endif %}
-                    >
-                        {{ destination.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div>
-            <label for="meal">Питание</label>
-            <select id="meal" name="meal">
-                <option value="">Любое питание</option>
-
-                {% for value, label in meal_choices %}
-                    <option
-                        value="{{ value }}"
-                        {% if selected_meal == value %}selected{% endif %}
-                    >
-                        {{ label }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <button type="submit">Показать туры</button>
-        <a href="{% url 'catalog:tour_list' %}">Сбросить фильтры</a>
-    </form>
-
-    <div class="tour-list">
-        {% for tour in tours %}
-            {% include "catalog/tour_card.html" with tour=tour %}
-        {% empty %}
-            <p>По вашему запросу туры не найдены.</p>
-        {% endfor %}
+<header class="catalog-hero">
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Хлебные крошки"><a href="{% url 'home' %}">Главная</a><span aria-current="page">Туры</span></nav>
+        <h1>Каталог туров</h1>
+        <p>Выберите направление и параметры поездки.</p>
     </div>
-
-    {% if page_obj.has_other_pages %}
-        <nav aria-label="Страницы каталога">
-            {% if page_obj.has_previous %}
-                <a href="?destination={{ selected_destination|urlencode }}&amp;meal={{ selected_meal|urlencode }}&amp;page={{ page_obj.previous_page_number }}">
-                    Назад
-                </a>
+</header>
+<div class="wrap catalog-shell">
+    <form id="catalog-search" class="search-panel compact-search" method="get" action="{% url 'catalog:tour_list' %}" aria-label="Поиск по каталогу">
+        {% include "catalog/partials/search_fields.html" with prefix="catalog" %}
+        <button class="btn primary" type="submit"><span class="icon i-search" aria-hidden="true"></span>Найти туры</button>
+    </form>
+    <div class="catalog-layout">
+        <aside class="filter-box" aria-label="Фильтры каталога">
+            <details class="catalog-filters" open>
+                <summary>Фильтры<span class="filter-indicator" aria-hidden="true"></span></summary>
+                <div class="filter-fields">
+            {% if durations %}
+            <div class="control filter-duration">
+                <label for="catalog-nights">Длительность</label>
+                <select id="catalog-nights" name="nights" form="catalog-search">
+                    <option value="">Любая</option>
+                    {% for length in durations %}<option value="{{ length }}"{% if selected_nights == length|stringformat:"s" %} selected{% endif %}>{{ length|nights_label }}</option>{% endfor %}
+                </select>
+            </div>
             {% endif %}
-
-            <span>
-                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
-            </span>
-
-            {% if page_obj.has_next %}
-                <a href="?destination={{ selected_destination|urlencode }}&amp;meal={{ selected_meal|urlencode }}&amp;page={{ page_obj.next_page_number }}">
-                    Далее
-                </a>
+            <fieldset class="meal-options"><legend>Питание</legend>
+                <label><input type="radio" form="catalog-search" name="meal" value=""{% if not selected_meal %} checked{% endif %}>Любое</label>
+                {% for value, label in meal_choices %}<label><input type="radio" form="catalog-search" name="meal" value="{{ value }}"{% if value == selected_meal %} checked{% endif %}>{{ label }}</label>{% endfor %}
+            </fieldset>
+            <div class="filter-actions">
+                <button class="btn secondary" type="submit" form="catalog-search">Применить</button>
+                {% if has_filters %}<a class="text-action" href="{% url 'catalog:tour_list' %}">Сбросить фильтры</a>{% endif %}
+            </div>
+                </div>
+            </details>
+        </aside>
+        <section class="catalog-results" aria-labelledby="results-title">
+            <div class="results-head">
+                <h2 id="results-title">{{ page_obj.paginator.count|tour_count }}</h2>
+                {% if tours or selected_sort %}
+                <div class="sort-control">
+                    <label for="catalog-sort" class="sr-only">Сортировать туры</label>
+                    <select id="catalog-sort" name="sort" form="catalog-search">
+                        <option value="">По умолчанию</option>
+                        <option value="date"{% if selected_sort == 'date' %} selected{% endif %}>По дате вылета</option>
+                        <option value="title"{% if selected_sort == 'title' %} selected{% endif %}>По названию</option>
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+            {% if tours %}
+                <div class="tour-grid">{% for tour in tours %}{% include "catalog/tour_card.html" with tour=tour compact_heading=True only %}{% endfor %}</div>
+            {% else %}
+                <div class="empty"><h3>{% if has_filters %}По этим условиям туров пока нет{% else %}Туры скоро появятся{% endif %}</h3>
+                    <p>{% if has_filters %}Измените условия поиска или запросите подбор у менеджера.{% else %}Укажите, куда хотите поехать, и менеджер предложит варианты.{% endif %}</p>
+                    <div class="empty-actions">{% if has_filters %}<a class="btn secondary" href="{% url 'catalog:tour_list' %}">Сбросить фильтры</a>{% endif %}<a class="btn primary" href="{% url 'inquiries:create' %}">Подобрать мне тур</a></div>
+                </div>
             {% endif %}
-        </nav>
-    {% endif %}
+            {% if page_obj.has_other_pages %}
+            <nav class="pagination" aria-label="Страницы каталога">
+                {% if page_obj.has_previous %}<a class="btn secondary" href="{% querystring page=page_obj.previous_page_number %}" rel="prev">Назад</a>{% endif %}
+                <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}<a class="btn secondary" href="{% querystring page=page_obj.next_page_number %}" rel="next">Далее</a>{% endif %}
+            </nav>{% endif %}
+        </section>
+    </div>
+</div>
 {% endblock %}

@@ -1,7 +1,12 @@
 {% extends "base.html" %}
-
+{% block title %}Заявка отправлена — Миллениум{% endblock %}
 {% block content %}
-<h1>Заявка отправлена</h1>
-<p>Менеджер свяжется с вами выбранным способом, чтобы уточнить детали поездки.</p>
-<a href="{% url 'catalog:tour_list' %}">Вернуться к турам</a>
+<div class="wrap page confirmation">
+    <section class="empty">
+        <span class="success-mark" aria-hidden="true">✓</span>
+        <h1>Заявка отправлена</h1>
+        <p>Менеджер свяжется с вами выбранным способом, чтобы обсудить поездку.</p>
+        <a class="btn primary" href="{% url 'catalog:tour_list' %}">Вернуться к турам</a>
+    </section>
+</div>
 {% endblock %}

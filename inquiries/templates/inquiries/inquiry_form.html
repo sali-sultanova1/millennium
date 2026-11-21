@@ -1,61 +1,90 @@
 {% extends "base.html" %}
-
+{% load catalog_display %}
+{% block title %}{% if tour %}Заявка на тур{% elif selected_tours %}Обсудить туры{% else %}Подбор тура{% endif %} — Миллениум{% endblock %}
 {% block content %}
-{% if selection_error %}
-    <h1>Не удалось открыть заявку</h1>
-    <p>{{ selection_error }}</p>
-    <a href="{% url 'catalog:favorites' %}">Вернуться в избранное</a>
-{% else %}
-{% if tour %}
-    <h1>Заявка на тур</h1>
-    <p>Выбранный тур: <strong>{{ tour.title }}</strong></p>
-    {% elif selected_tours %}
-    <p>Выбранные туры</p>
-    <ul>
-        {% for selected_tour in selected_tours %}
-            <li>{{ selected_tour.title }}</li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <h1>Подобрать мне тур</h1>
-    <p>Расскажите о желаемой поездке. Менеджер поможет подобрать варианты.</p>
-{% endif %}
-
-{% if tour %}
-    {% url 'inquiries:tour_create' slug=tour.slug as form_action %}
-{% elif selected_tours %}
-    {% url 'inquiries:favorites_create' as form_action %}
-{% else %}
-    {% url 'inquiries:create' as form_action %}
-{% endif %}
-
-<form method="post" action="{{ form_action }}">
-    {% csrf_token %}
-
-    {% for selected_tour in selected_tours %}
-        <input type="hidden" name="ids" value="{{ selected_tour.pk }}">
-    {% endfor %}
-
-    {% if show_favorites_picker %}
-        <section id="inquiry-favorites" hidden>
-            <h2>Прикрепить туры из избранного</h2>
-            <p>По желанию отметьте варианты, которые менеджер учтёт при подборе.</p>
-
-            <div id="inquiry-favorites-actions" hidden>
-                <button type="button" id="inquiry-select-all">Выбрать все</button>
-                <button type="button" id="inquiry-clear-selection">Снять выбор</button>
-            </div>
-
-            <div id="inquiry-favorites-list"
-                data-items-url="{% url 'catalog:favorites_items' %}"
-                data-picker-mode="selection"></div>
-        </section>
-
-        {{ selected_tour_ids|json_script:"inquiry-selected-tour-ids" }}
+<header class="page-banner"><div class="wrap">
+    <nav class="crumbs" aria-label="Хлебные крошки">
+        <a href="{% url 'home' %}">Главная</a>
+        {% if tour %}<a href="{% url 'catalog:tour_detail' slug=tour.slug %}">К туру</a>{% elif selected_tours or selection_error %}<a href="{% url 'catalog:favorites' %}">Избранное</a>{% endif %}
+        <span aria-current="page">Заявка</span>
+    </nav>
+    <h1>{% if selection_error %}Проверьте выбранные туры{% elif tour %}Заявка на тур{% elif selected_tours %}Обсудить выбранные туры{% else %}Подбор с менеджером{% endif %}</h1>
+    {% if not selection_error %}<p>Оставьте контакты. Менеджер свяжется с вами выбранным способом и уточнит детали поездки.</p>{% endif %}
+</div></header>
+<div class="wrap page inquiry-page">
+    {% if selection_error %}
+        <div class="empty"><p role="alert">{{ selection_error }}</p><a class="btn secondary" href="{% url 'catalog:favorites' %}">Вернуться в избранное</a></div>
+    {% else %}
+        <div class="inquiry-layout">
+            <aside class="request-summary surface">
+                {% if tour %}
+                    <h2>Выбранный тур</h2>
+                    <p class="location"><span class="icon i-pin" aria-hidden="true"></span>{{ tour.destination.name }}{% if tour.resort %}, {{ tour.resort }}{% endif %}</p>
+                    <a class="summary-tour" href="{% url 'catalog:tour_detail' slug=tour.slug %}">{{ tour.title }}</a>
+                    {% include "catalog/partials/price.html" with tour=tour only %}
+                {% elif selected_tours %}
+                    <h2>В вашей подборке</h2><ul>{% for item in selected_tours %}<li><a href="{% url 'catalog:tour_detail' slug=item.slug %}">{{ item.title }}</a></li>{% endfor %}</ul>
+                {% else %}
+                    <h2>Что поможет в подборе</h2>
+                    <p>Если уже знаете даты, город вылета или бюджет, укажите их в пожеланиях. Бюджет укажите на всех путешественников.</p>
+                    <a class="underlink" href="#id_departure_date_from">Указать даты поездки</a>
+                {% endif %}
+            </aside>
+            {% if tour %}{% url 'inquiries:tour_create' slug=tour.slug as action %}{% elif selected_tours %}{% url 'inquiries:favorites_create' as action %}{% else %}{% url 'inquiries:create' as action %}{% endif %}
+            <form class="inquiry-form" method="post" action="{{ action }}">
+                {% csrf_token %}
+                {% for item in selected_tours %}<input type="hidden" name="ids" value="{{ item.pk }}">{% endfor %}
+                {% if form.errors %}
+                    <div class="alert" role="alert">
+                        <strong>Проверьте выделенные поля</strong>
+                        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                        {% if form.errors|length > 0 %}<ul>{% for field in form %}{% if field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}</a></li>{% endif %}{% endfor %}</ul>{% endif %}
+                    </div>
+                {% endif %}
+                <fieldset class="form-group">
+                    <legend>Как с вами связаться</legend>
+                    <p class="form-hint">Поля со звёздочкой обязательны.</p>
+                    <div class="field-grid">
+                        {% include "inquiries/partials/field.html" with field=form.name only %}
+                        {% include "inquiries/partials/field.html" with field=form.phone only %}
+                        {% include "inquiries/partials/field.html" with field=form.contact_method wide=True only %}
+                    </div>
+                </fieldset>
+                <details class="preferences"{% if show_favorites_picker or form.errors %} open{% endif %}>
+                    <summary>Пожелания к поездке <small>По желанию</small></summary>
+                    <div class="field-grid">
+                        {% include "inquiries/partials/field.html" with field=form.preferred_destinations only %}
+                        {% include "inquiries/partials/field.html" with field=form.departure_city only %}
+                        {% include "inquiries/partials/field.html" with field=form.departure_date_from only %}
+                        {% include "inquiries/partials/field.html" with field=form.departure_date_to only %}
+                        {% include "inquiries/partials/field.html" with field=form.nights_min only %}
+                        {% include "inquiries/partials/field.html" with field=form.nights_max only %}
+                        {% include "inquiries/partials/field.html" with field=form.adults only %}
+                        {% include "inquiries/partials/field.html" with field=form.children only %}
+                        {% include "inquiries/partials/field.html" with field=form.children_ages wide=True only %}
+                        {% include "inquiries/partials/field.html" with field=form.budget_max only %}
+                        {% include "inquiries/partials/field.html" with field=form.budget_currency only %}
+                    </div>
+                </details>
+                {% if show_favorites_picker %}
+                    <section class="inquiry-favorites" id="inquiry-favorites" hidden>
+                        <h2>Прикрепить туры из избранного</h2>
+                        <div class="minor-actions" id="inquiry-favorites-actions" hidden>
+                            <button type="button" id="inquiry-select-all">Выбрать все</button><button type="button" id="inquiry-clear-selection">Снять выбор</button>
+                        </div>
+                        <div id="inquiry-favorites-list" class="favorites-list" data-items-url="{% url 'catalog:favorites_items' %}" data-picker-mode="selection"></div>
+                    </section>
+                    {% if selected_tour_ids %}
+                        <div id="restored-tour-inputs" hidden>
+                            {% for pk in selected_tour_ids %}<input type="hidden" name="ids" value="{{ pk }}">{% endfor %}
+                        </div>
+                    {% endif %}
+                    {{ selected_tour_ids|json_script:"inquiry-selected-tour-ids" }}
+                {% endif %}
+                {% include "inquiries/partials/field.html" with field=form.comment wide=True only %}
+                <button class="btn primary" type="submit">Отправить заявку</button>
+            </form>
+        </div>
     {% endif %}
-
-    {{ form.as_p }}
-    <button type="submit">Оставить заявку</button>
-</form>
-{% endif %}
+</div>
 {% endblock %}

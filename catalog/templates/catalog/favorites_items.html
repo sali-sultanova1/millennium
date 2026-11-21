@@ -1,23 +1,29 @@
+{% load i18n catalog_display %}{% language "ru" %}
 {% for tour in tours %}
-    <article data-favorite-card>
-        <h2>
-            <a href="{% url 'catalog:tour_detail' slug=tour.slug %}">
-                {{ tour.title }}
-            </a>
-        </h2>
-        {% if tour.price %}
-            <p>{{ tour.price }} {{ tour.currency }}</p>
-        {% endif %}
-        <label>
+<article class="favorite-row{% if selection_mode %} picker-row{% endif %}" data-favorite-card>
+    {% if not selection_mode %}
+        {% with cover=tour.images.all.0 landscape=tour.destination|destination_photo:"small" %}
+        <div class="row-thumb{% if not cover and not landscape %} type-tile{% endif %}" aria-hidden="true">
+            {% if cover %}<img src="{{ cover.image.url }}" alt="" width="130" height="96" loading="lazy">
+            {% elif landscape %}<img src="{{ landscape }}" alt="" width="130" height="96" loading="lazy">{% endif %}
+        </div>
+        {% endwith %}
+    {% endif %}
+    <div class="row-title">
+        <p class="location">{{ tour.destination.name }}{% if tour.resort %} · {{ tour.resort }}{% endif %}</p>
+        <h3><a href="{% url 'catalog:tour_detail' slug=tour.slug %}">{{ tour.title }}</a></h3>
+        {% if tour.departure_date or tour.nights %}<p class="row-meta">{% if tour.departure_date %}{{ tour.departure_date|date:"j E Y" }}{% endif %}{% if tour.departure_date and tour.nights %} · {% endif %}{% if tour.nights %}{{ tour.nights|nights_label }}{% endif %}</p>{% endif %}
+    </div>
+    <div class="row-choice">
+        <label class="row-check">
             <input type="checkbox" name="ids" value="{{ tour.pk }}">
-            Выбрать тур «{{ tour.title }}»
+            <span class="sr-only">Выбрать тур «{{ tour.title }}»</span>
+            {% if not selection_mode %}<span class="check-caption" aria-hidden="true">В подборку</span>{% endif %}
         </label>
-        {% if not selection_mode %}
-            <button type="button" data-remove-favorite-id="{{ tour.pk }}">
-                Убрать из избранного
-            </button>
-        {% endif %}
-    </article>
-{% empty %}
-    <p>В избранном пока нет доступных туров.</p>
-{% endfor %}
+        {% if not selection_mode %}{% include "catalog/partials/price.html" with tour=tour only %}{% endif %}
+    </div>
+    {% if not selection_mode %}
+        <button class="remove-btn" type="button" data-remove-favorite-id="{{ tour.pk }}" aria-label="Убрать из избранного «{{ tour.title }}»" title="Убрать из избранного"><span class="icon i-close" aria-hidden="true"></span></button>
+    {% endif %}
+</article>
+{% endfor %}{% endlanguage %}

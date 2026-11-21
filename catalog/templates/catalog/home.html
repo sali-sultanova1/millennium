@@ -1,29 +1,61 @@
 {% extends "base.html" %}
-
+{% load static catalog_display %}
 {% block content %}
-<section class="home-hero">
-    <h1>Найдите тур для следующего путешествия</h1>
-    <p>Посмотрите предложения Millennium или расскажите менеджеру, куда хотите поехать.</p>
-
-    <form method="get" action="{% url 'catalog:tour_list' %}">
-        <label for="home-destination">Куда хотите поехать?</label>
-        <select id="home-destination" name="destination">
-            <option value="">Все направления</option>
-            {% for destination in destinations %}
-                <option value="{{ destination.slug }}">{{ destination.name }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Найти туры</button>
-    </form>
-
-    <a href="{% url 'inquiries:create' %}">Подобрать мне тур</a>
+<section class="hero" aria-labelledby="home-title">
+    <div class="hero-scenery" aria-hidden="true">
+        <img src="{% static 'catalog/images/riviera-wide.webp' %}" srcset="{% static 'catalog/images/riviera-small.webp' %} 900w, {% static 'catalog/images/riviera-wide.webp' %} 1920w" sizes="100vw" alt="" fetchpriority="high">
+    </div>
+    <div class="wrap hero-inner">
+        <div class="hero-copy">
+            <h1 id="home-title">Путешествия,<br>которые остаются<br><em>в сердце.</em></h1>
+            <p>Выберите направление, сравните туры и обсудите с менеджером тот, который вам подходит.</p>
+            <div class="hero-actions"><a class="btn primary" href="{% url 'catalog:tour_list' %}">Выбрать тур</a><a class="btn secondary" href="{% url 'inquiries:create' %}">Помощь менеджера</a></div>
+        </div>
+    </div>
 </section>
-
-<div class="tour-grid">
-    {% for tour in tours %}
-        {% include "catalog/tour_card.html" with tour=tour heading_tag="h3" %}
-    {% empty %}
-        <p>Сейчас в каталоге нет опубликованных туров.</p>
-    {% endfor %}
+<div class="wrap home-search-wrap">
+    <form class="search-panel" method="get" action="{% url 'catalog:tour_list' %}" aria-label="Поиск туров">
+        {% include "catalog/partials/search_fields.html" with prefix="home" with_options=True %}
+        <button class="btn primary" type="submit"><span class="icon i-search" aria-hidden="true"></span>Найти туры</button>
+    </form>
 </div>
+
+<nav class="wrap service-strip" aria-label="Возможности агентства">
+    <a href="{% url 'catalog:tour_list' %}"><span class="service-icon"><span class="icon i-calendar" aria-hidden="true"></span></span><span><strong>Туры агентства</strong><small>Даты, маршруты и цены</small></span></a>
+    <a href="{% url 'inquiries:create' %}#id_budget_max"><span class="service-icon"><span class="icon i-wallet" aria-hidden="true"></span></span><span><strong>Подбор по бюджету</strong><small>Укажите сумму на всех</small></span></a>
+    <a href="{% url 'inquiries:create' %}#id_contact_method"><span class="service-icon"><span class="icon i-chat" aria-hidden="true"></span></span><span><strong>Связь с менеджером</strong><small>Выберите способ связи</small></span></a>
+    <a href="{% url 'catalog:favorites' %}"><span class="service-icon"><span class="icon i-heart" aria-hidden="true"></span></span><span><strong>Избранные туры</strong><small>Сравните свои варианты</small></span></a>
+</nav>
+
+{% if destinations %}
+<section class="wrap home-section" id="directions" aria-labelledby="directions-title">
+    <div class="section-head">
+        <h2 id="directions-title">Куда отправимся?</h2>
+        <a class="underlink" href="{% url 'catalog:tour_list' %}">Весь каталог</a>
+    </div>
+    <div class="destination-grid">
+        {% for destination in destinations|slice:":6" %}
+            {% with photo=destination|destination_photo small=destination|destination_photo:"small" %}
+            <a class="destination-tile{% if not photo %} type-tile{% endif %}" href="{% url 'catalog:tour_list' %}?destination={{ destination.slug|urlencode }}">
+                {% if photo %}<img src="{{ small }}" srcset="{{ small }} 480w, {{ photo }} 1120w" sizes="(max-width: 640px) 46vw, (max-width: 960px) 30vw, 238px" alt="" loading="lazy" decoding="async">{% endif %}
+                <span>{{ destination.name }}</span>
+            </a>
+            {% endwith %}
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="wrap home-section" id="directions"><div class="empty"><h2>Есть направление на примете?</h2><p>Укажите, куда хотите поехать. Менеджер подберёт варианты.</p><a class="btn secondary" href="{% url 'inquiries:create' %}">Оставить пожелания</a></div></section>
+{% endif %}
+
+{% if tours %}
+<section class="wrap home-section" aria-labelledby="offers-title">
+    <div class="section-head"><h2 id="offers-title">Идеи для путешествий</h2><a class="underlink" href="{% url 'catalog:tour_list' %}">Все туры</a></div>
+    <div class="tour-grid">{% for tour in tours %}{% include "catalog/tour_card.html" with tour=tour compact_heading=True only %}{% endfor %}</div>
+</section>
+{% endif %}
+<section class="wrap home-section" aria-labelledby="help-title"><div class="concierge">
+    <div><h2 id="help-title">Не знаете, с чего начать?</h2><p>Расскажите, куда и когда хотите поехать. Менеджер подберёт туры с учётом вашего бюджета.</p></div>
+    <a class="btn dark" href="{% url 'inquiries:create' %}">Получить подборку</a>
+</div></section>
 {% endblock %}
