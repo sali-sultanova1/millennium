@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Услуги — Миллениум{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'pages/agency.css' %}">
+{% endblock %}
+
+{% block content %}
+<header class="page-banner">
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Хлебные крошки">
+            <a href="{% url 'home' %}">Главная</a><span aria-current="page">Услуги</span>
+        </nav>
+        <h1>Услуги</h1>
+        <p>Выберите готовый тур, обсудите несколько предложений с менеджером или запросите индивидуальную подборку.</p>
+    </div>
+</header>
+<div class="wrap page agency-services">
+    <article class="surface agency-card">
+        <span class="service-icon" aria-hidden="true"><span class="icon i-calendar"></span></span>
+        <h2>Готовые туры</h2>
+        <p>Посмотрите предложения агентства. В каталоге можно выбрать направление, город вылета, даты и условия поездки.</p>
+        <a class="underlink agency-card-link" href="{% url 'catalog:tour_list' %}">Открыть каталог</a>
+    </article>
+    <article class="surface agency-card">
+        <span class="service-icon" aria-hidden="true"><span class="icon i-heart"></span></span>
+        <h2>Подборка из избранного</h2>
+        <p>Сохраните понравившиеся варианты, отметьте нужные туры в избранном и отправьте их менеджеру одной заявкой.</p>
+        <a class="underlink agency-card-link" href="{% url 'catalog:favorites' %}">Перейти в избранное</a>
+    </article>
+    <article class="surface agency-card">
+        <span class="service-icon" aria-hidden="true"><span class="icon i-chat"></span></span>
+        <h2>Индивидуальный подбор</h2>
+        <p>Расскажите, когда хотите поехать, сколько человек будет в поездке и какой бюджет вы планируете.</p>
+        <a class="btn primary agency-card-link" href="{% url 'inquiries:create' %}">Оставить заявку</a>
+    </article>
+</div>
+{% endblock %}

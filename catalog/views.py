@@ -2,8 +2,8 @@ from django.core.paginator import Paginator
 from django.db.models import Case, F, When
 from django.shortcuts import get_object_or_404, render
 
-from .models import Destination, Tour
 from .forms import CatalogFilterForm
+from .models import Destination, Tour
 
 
 def published_tours():

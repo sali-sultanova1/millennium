@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}О компании — Миллениум{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'pages/agency.css' %}">
+{% endblock %}
+
+{% block content %}
+<header class="page-banner">
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Хлебные крошки">
+            <a href="{% url 'home' %}">Главная</a><span aria-current="page">О компании</span>
+        </nav>
+        <h1>О компании</h1>
+        <p>«Миллениум» — туристическое агентство. Помогаем подобрать поездку под ваши даты, бюджет и пожелания.</p>
+    </div>
+</header>
+<div class="wrap page agency-about">
+    <section class="surface agency-card" aria-labelledby="about-help">
+        <h2 id="about-help">С чего начать</h2>
+        <p>Если направление уже выбрано, посмотрите туры в каталоге и сохраните понравившиеся варианты в избранное.</p>
+        <p>Если пока выбираете, расскажите менеджеру, откуда вам удобно вылететь, кто едет и на какую сумму вы рассчитываете.</p>
+        <a class="underlink agency-card-link" href="{% url 'pages:services' %}">Посмотреть услуги агентства</a>
+    </section>
+    <section class="surface agency-card" aria-labelledby="about-selection">
+        <h2 id="about-selection">Как проходит подбор</h2>
+        <ol class="agency-steps">
+            <li>Оставьте заявку на конкретный тур или опишите пожелания к поездке.</li>
+            <li>Менеджер свяжется с вами выбранным способом и уточнит детали.</li>
+            <li>Обсудите подходящие варианты и условия бронирования.</li>
+        </ol>
+        <a class="btn primary agency-card-link" href="{% url 'inquiries:create' %}">Подобрать тур</a>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Направления — Миллениум{% endblock %}
+
+{% block content %}
+<header class="page-banner">
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Хлебные крошки">
+            <a href="{% url 'home' %}">Главная</a><span aria-current="page">Направления</span>
+        </nav>
+        <h1>Направления</h1>
+        <p>Выберите, куда хотите поехать, чтобы посмотреть предложения в каталоге.</p>
+    </div>
+</header>
+<div class="wrap page">
+    {% if destinations %}
+        {% include "catalog/partials/destination_grid.html" with destinations=destinations only %}
+    {% else %}
+        <div class="empty">
+            <h2>Направления скоро появятся</h2>
+            <p>Если у вас уже есть планы на поездку, расскажите о них менеджеру.</p>
+            <a class="btn primary" href="{% url 'inquiries:create' %}">Оставить пожелания</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

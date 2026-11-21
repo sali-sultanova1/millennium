@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static catalog_display %}
+{% load static %}
 {% block content %}
 <section class="hero" aria-labelledby="home-title">
     <div class="hero-scenery" aria-hidden="true">
@@ -31,18 +31,9 @@
 <section class="wrap home-section" id="directions" aria-labelledby="directions-title">
     <div class="section-head">
         <h2 id="directions-title">Куда отправимся?</h2>
-        <a class="underlink" href="{% url 'catalog:tour_list' %}">Весь каталог</a>
+        <a class="underlink" href="{% url 'pages:directions' %}">Все направления</a>
     </div>
-    <div class="destination-grid">
-        {% for destination in destinations|slice:":6" %}
-            {% with photo=destination|destination_photo small=destination|destination_photo:"small" %}
-            <a class="destination-tile{% if not photo %} type-tile{% endif %}" href="{% url 'catalog:tour_list' %}?destination={{ destination.slug|urlencode }}">
-                {% if photo %}<img src="{{ small }}" srcset="{{ small }} 480w, {{ photo }} 1120w" sizes="(max-width: 640px) 46vw, (max-width: 960px) 30vw, 238px" alt="" loading="lazy" decoding="async">{% endif %}
-                <span>{{ destination.name }}</span>
-            </a>
-            {% endwith %}
-        {% endfor %}
-    </div>
+    {% include "catalog/partials/destination_grid.html" with destinations=destinations|slice:":6" only %}
 </section>
 {% else %}
 <section class="wrap home-section" id="directions"><div class="empty"><h2>Есть направление на примете?</h2><p>Укажите, куда хотите поехать. Менеджер подберёт варианты.</p><a class="btn secondary" href="{% url 'inquiries:create' %}">Оставить пожелания</a></div></section>

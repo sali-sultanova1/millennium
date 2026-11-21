@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'catalog/styles.css' %}?v=b41184644d81">
     <script src="{% static 'catalog/favorites.js' %}?v=720eab5b5ca1" defer></script>
     <script src="{% static 'catalog/interface.js' %}?v=b58e7b1751bb" defer></script>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <a class="skip" href="#main">К содержимому</a>
@@ -22,7 +23,9 @@
             <nav class="desktop-nav" aria-label="Основная навигация">
                 <a href="{% url 'home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Главная</a>
                 <a href="{% url 'catalog:tour_list' %}"{% if request.resolver_match.url_name == 'tour_list' %} aria-current="page"{% elif request.resolver_match.url_name == 'tour_detail' %} aria-current="location"{% endif %}>Каталог туров</a>
-                <a href="{% url 'home' %}#directions">Направления</a>
+                <a href="{% url 'pages:directions' %}"{% if request.resolver_match.view_name == 'pages:directions' %} aria-current="page"{% endif %}>Направления</a>
+                <a href="{% url 'pages:about' %}"{% if request.resolver_match.view_name == 'pages:about' %} aria-current="page"{% endif %}>О компании</a>
+                <a href="{% url 'pages:services' %}"{% if request.resolver_match.view_name == 'pages:services' %} aria-current="page"{% endif %}>Услуги</a>
                 <a href="{% url 'pages:contacts' %}"{% if request.resolver_match.view_name == 'pages:contacts' %} aria-current="page"{% endif %}>Контакты</a>
             </nav>
             <div class="masthead-actions">
@@ -35,7 +38,10 @@
                     <nav aria-label="Меню на телефоне">
                         <a href="{% url 'home' %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>Главная</a>
                         <a href="{% url 'catalog:tour_list' %}"{% if request.resolver_match.url_name == 'tour_list' %} aria-current="page"{% elif request.resolver_match.url_name == 'tour_detail' %} aria-current="location"{% endif %}>Каталог туров</a>
-                        <a href="{% url 'home' %}#directions">Направления</a>
+                        <a href="{% url 'pages:directions' %}"{% if request.resolver_match.view_name == 'pages:directions' %} aria-current="page"{% endif %}>Направления</a>
+                        <a href="{% url 'pages:about' %}"{% if request.resolver_match.view_name == 'pages:about' %} aria-current="page"{% endif %}>О компании</a>
+                        <a href="{% url 'pages:services' %}"{% if request.resolver_match.view_name == 'pages:services' %} aria-current="page"{% endif %}>Услуги</a>
+                        <a href="{% url 'pages:contacts' %}"{% if request.resolver_match.view_name == 'pages:contacts' %} aria-current="page"{% endif %}>Контакты</a>
                         <a href="{% url 'catalog:favorites' %}"{% if request.resolver_match.url_name == 'favorites' %} aria-current="page"{% endif %}>Избранное</a>
                         <a href="{% url 'inquiries:create' %}"{% if request.resolver_match.view_name == 'inquiries:create' %} aria-current="page"{% endif %}>Подобрать тур</a>
                     </nav>
@@ -47,10 +53,22 @@
     <footer class="footer">
         <div class="wrap footer-inner">
             <a class="brand footer-brand" href="{% url 'home' %}" aria-label="Миллениум — на главную">{% include "catalog/partials/brand.html" %}</a>
-            <nav aria-label="Путешествия"><h2>Путешествия</h2><a href="{% url 'catalog:tour_list' %}">Каталог туров</a><a href="{% url 'home' %}#directions">Направления</a><a href="{% url 'catalog:favorites' %}">Избранное</a></nav>
-            <nav aria-label="Связаться с агентством"><h2>Связаться с агентством</h2><a href="{% url 'inquiries:create' %}">Подобрать мне тур</a><a href="{% url 'catalog:favorites' %}">Обсудить избранное</a></nav>
+            <nav aria-label="Путешествия">
+                <h2>Путешествия</h2>
+                <a href="{% url 'catalog:tour_list' %}">Каталог туров</a>
+                <a href="{% url 'pages:directions' %}">Направления</a>
+                <a href="{% url 'catalog:favorites' %}">Избранное</a>
+            </nav>
+            <nav aria-label="Агентство">
+                <h2>Агентство</h2>
+                <a href="{% url 'pages:about' %}">О компании</a>
+                <a href="{% url 'pages:services' %}">Услуги</a>
+                <a href="{% url 'pages:contacts' %}">Контакты</a>
+                <a href="{% url 'inquiries:create' %}">Подобрать мне тур</a>
+                <a href="{% url 'catalog:favorites' %}">Обсудить избранное</a>
+            </nav>
         </div>
-        <div class="wrap footer-meta"><span>© {% now "Y" %} Миллениум</span><a href="{% static 'catalog/photos.html' %}">Об изображениях</a></div>
+        <div class="wrap footer-meta"><span>© {% now "Y" %} Миллениум</span></div>
     </footer>
     <p class="sr-only" role="status" id="favorite-feedback"></p>
 </body>

@@ -1,0 +1,13 @@
+{% load catalog_display %}
+<div class="destination-grid">
+    {% for destination in destinations %}
+        {% with photo=destination|destination_photo small=destination|destination_photo:"small" %}
+            <a class="destination-tile{% if not photo %} type-tile{% endif %}" href="{% url 'catalog:tour_list' %}?destination={{ destination.slug|urlencode }}">
+                {% if photo %}
+                    <img src="{{ small }}" srcset="{{ small }} 480w, {{ photo }} 1120w" sizes="(max-width: 640px) 46vw, (max-width: 960px) 30vw, 238px" alt="" loading="lazy" decoding="async">
+                {% endif %}
+                <span>{{ destination.name }}</span>
+            </a>
+        {% endwith %}
+    {% endfor %}
+</div>
