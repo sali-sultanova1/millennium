@@ -68,7 +68,7 @@ button:disabled { opacity: .55; cursor: default; }
 .i-chat { --shape: url("data:image/svg+xml,%3Csvg%20xmlns=%22http%3A//www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22black%22%20stroke-width=%221.75%22%20stroke-linejoin=%22round%22%20stroke-linecap=%22round%22%3E%3Cpath%20d=%22M20%2011.5a7.8%207.8%200%200%201-8.2%207.5H9l-5%202%201.3-4.8A7%207%200%200%201%203.6%2012c0-4.2%203.6-7.7%208.2-7.7S20%207.3%2020%2011.5Z%22/%3E%3C/svg%3E"); }
 [aria-pressed="true"] .i-heart { --shape: url("data:image/svg+xml,%3Csvg%20xmlns=%22http%3A//www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22black%22%20stroke=%22black%22%20stroke-width=%221.75%22%20stroke-linejoin=%22round%22%20stroke-linecap=%22round%22%3E%3Cpath%20d=%22M12%2020.2%204.4%2012.8C-.4%208%205.6%201.1%2010.7%205.5L12%206.7l1.3-1.2C18.4%201.1%2024.4%208%2019.6%2012.8Z%22/%3E%3C/svg%3E"); color: var(--accent); }
 
-/* Brand and navigation */
+
 .masthead { position: relative; z-index: 5; background: #fff; border-bottom: 1px solid var(--edge); }
 .masthead-inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 4.7rem; }
 .brand { display: inline-flex; flex: none; align-items: center; gap: .67rem; color: var(--navy); text-decoration: none; }
@@ -102,7 +102,7 @@ summary::-webkit-details-marker { display: none; }
 .footer-inner nav a:hover, .footer-meta a:hover { color: var(--rose); text-decoration: underline; }
 .footer-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1rem; border-top: 1px solid var(--edge); padding-block: 1rem 1.3rem; }
 
-/* Home panorama, search and destinations */
+
 .hero { position: relative; isolation: isolate; overflow: hidden; background: #e6f5fb; }
 .hero-scenery, .hero-scenery::after { position: absolute; inset: 0; }
 .hero-scenery { z-index: -1; }
@@ -150,7 +150,7 @@ textarea { resize: vertical; }
 .concierge p { max-width: 37rem; margin-top: .45rem; color: var(--copy); }
 .concierge .btn { flex: none; }
 
-/* Catalog and shared tour cards */
+
 .crumbs { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .45rem; font-size: .87rem; color: var(--muted); }
 .crumbs > * + *::before { display: inline-block; content: "›"; color: #728b9e; margin-right: .45rem; }
 .crumbs a { text-decoration: none; }
@@ -217,7 +217,7 @@ textarea { resize: vertical; }
 .card-actions { display: grid; grid-template-columns: minmax(0,.93fr) minmax(0,1.24fr); gap: .42rem; margin-top: .85rem; }
 .card-actions .btn { min-height: 2.75rem; padding: .55rem .36rem; font-size: .88rem; }
 
-/* Cards in the same row share tracks, including when a title wraps or hotel data is absent. */
+
 @supports (grid-template-rows: subgrid) {
     .tour-grid { row-gap: 0; }
     .tour-card { display: grid; grid-row: span 7; grid-template-rows: subgrid; row-gap: 0; margin-bottom: 1.15rem; }
@@ -234,7 +234,7 @@ textarea { resize: vertical; }
 .empty { padding: clamp(2rem,5vw,4rem) 1.2rem; text-align: center; background: white; border: 1px solid var(--edge); border-radius: var(--radius); }
 .empty > p { max-width: 35rem; margin: .7rem auto 1.1rem; color: var(--copy); }
 
-/* Detail: a full-width photo gallery, then the trip and its enquiry */
+
 .detail-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin: 1.35rem 0 1.55rem; }
 .detail-heading > div { min-width: 0; }
 .detail-heading h1 { margin-top: .45rem; max-width: 52rem; }
@@ -295,7 +295,7 @@ textarea { resize: vertical; }
 .viewer-footer { justify-content: center; min-height: 2.75rem; }
 .viewer-close, .viewer-control { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 8px; background: #1d3547; color: white; border: 1px solid #657a88; }
 .viewer-close:hover, .viewer-control:hover { background: #2e4f63; }
-/* Saved offers, selection states and inquiry forms */
+
 .saved-layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(16rem,.39fr); gap: 1.4rem; align-items: start; }
 .saved-layout:has(.selection-footer[hidden]) { grid-template-columns: minmax(0,1fr); }
 .saved-items { min-width: 0; }
@@ -365,7 +365,7 @@ textarea { resize: vertical; }
 .confirmation { max-width: 51rem; margin-block: auto; }
 .confirmation .empty { background: var(--pale); }
 
-/* Enquiries, feedback and credits */
+
 .preferences summary::after { margin-inline-end: .7rem; }
 .form-field:has(:user-invalid) > label { color: var(--rose); }
 .error-message { color: #922042; }
@@ -502,4 +502,10 @@ textarea { resize: vertical; }
     .icon { forced-color-adjust: none; background-color: ButtonText; }
     select { appearance: auto; background-image: none; }
     .heart-btn::before, .photo-note, .destination-tile { border: 1px solid CanvasText; }
+}
+
+.catalog-filter-inputs {
+    display: grid;
+    gap: .75rem;
+    margin-top: 1rem;
 }

@@ -179,8 +179,8 @@ function initInquiryFavorites(section) {
             addRetry(list, reload);
             return;
         }
-        // The checkboxes take over from the server-rendered inputs after the list is ready.
-        document.querySelector("#restored-tour-inputs")?.remove();
+        
+    document.querySelector("#restored-tour-inputs")?.remove();
         const boxes = list.querySelectorAll(checkboxSelector);
         for (const box of boxes) box.checked = restored.includes(box.value);
         section.hidden = !boxes.length;

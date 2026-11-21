@@ -18,7 +18,11 @@ sortControl?.addEventListener("change", () => sortControl.form.requestSubmit());
 
 if (catalogFilters) {
     const narrowScreen = window.matchMedia("(max-width: 46rem)");
-    const adjustFilters = () => { catalogFilters.open = !narrowScreen.matches; };
+    const adjustFilters = () => {
+        catalogFilters.open =
+            !narrowScreen.matches || catalogFilters.hasAttribute("data-has-errors");
+    };
+
     adjustFilters();
     narrowScreen.addEventListener("change", adjustFilters);
 }
@@ -63,8 +67,10 @@ if (gallery) {
 }
 
 document.addEventListener("invalid", (event) => {
-    const preferences = event.target.closest("details.preferences");
-    if (preferences) preferences.open = true;
+    const group = event.target.closest("details.preferences, details.catalog-filters");
+    if (group) {
+        group.open = true;
+    }
 }, true);
 
 function revealLinkedField() {

@@ -16,7 +16,7 @@
     </form>
     <div class="catalog-layout">
         <aside class="filter-box" aria-label="Фильтры каталога">
-            <details class="catalog-filters" open>
+            <details class="catalog-filters" open{% if filter_form.errors %} data-has-errors{% endif %}>
                 <summary>Фильтры<span class="filter-indicator" aria-hidden="true"></span></summary>
                 <div class="filter-fields">
             {% if durations %}
@@ -32,6 +32,23 @@
                 <label><input type="radio" form="catalog-search" name="meal" value=""{% if not selected_meal %} checked{% endif %}>Любое</label>
                 {% for value, label in meal_choices %}<label><input type="radio" form="catalog-search" name="meal" value="{{ value }}"{% if value == selected_meal %} checked{% endif %}>{{ label }}</label>{% endfor %}
             </fieldset>
+            <div class="catalog-filter-inputs">
+                {% for field in filter_form %}
+                    <div class="form-field{% if field.errors %} has-error{% endif %}">
+                        {{ field.label_tag }}
+                        {{ field }}
+
+                        {% if field.errors %}
+                            <ul class="field-errors" id="{{ field.auto_id }}_error">
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
             <div class="filter-actions">
                 <button class="btn secondary" type="submit" form="catalog-search">Применить</button>
                 {% if has_filters %}<a class="text-action" href="{% url 'catalog:tour_list' %}">Сбросить фильтры</a>{% endif %}
@@ -55,6 +72,7 @@
             </div>
             {% if tours %}
                 <div class="tour-grid">{% for tour in tours %}{% include "catalog/tour_card.html" with tour=tour compact_heading=True only %}{% endfor %}</div>
+                {% elif filter_form.errors %}<div class="empty" role="alert"><h3>Проверьте параметры фильтра</h3><p>Исправьте выделенные поля и нажмите «Применить».</p></div>
             {% else %}
                 <div class="empty"><h3>{% if has_filters %}По этим условиям туров пока нет{% else %}Туры скоро появятся{% endif %}</h3>
                     <p>{% if has_filters %}Измените условия поиска или запросите подбор у менеджера.{% else %}Укажите, куда хотите поехать, и менеджер предложит варианты.{% endif %}</p>

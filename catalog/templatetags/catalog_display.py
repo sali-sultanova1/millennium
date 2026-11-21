@@ -34,7 +34,6 @@ def tour_count(value):
 
 @register.filter
 def nights_label(value):
-    """Display a duration with the Russian form of «ночь»."""
     last_digit = value % 10
     if 11 <= value % 100 <= 14:
         unit = "ночей"

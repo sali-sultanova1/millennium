@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -247,10 +248,41 @@ class CatalogFilterTests(TestCase):
     def setUp(self):
         self.destination1 = Destination.objects.create(name="Китай", slug="china", is_active=True)
         self.destination2 = Destination.objects.create(name="Турция", slug="turkey", is_active=True)
-        self.tour1 = Tour.objects.create(destination=self.destination1, title="Первый", slug="test-tour1", meal="BB", is_active=True)
-        self.tour2 = Tour.objects.create(destination=self.destination1, title="Второй", slug="test-tour2", meal="AI", is_active=True)
-        self.tour3 = Tour.objects.create(destination=self.destination2, title="Третий", slug="test-tour3", meal="BB", is_active=True)
+        self.tour1 = Tour.objects.create(destination=self.destination1, title="Первый", slug="test-tour1", meal="BB", departure_date=date(2026, 12, 10), is_active=True)
+        self.tour2 = Tour.objects.create(destination=self.destination1, title="Второй", slug="test-tour2", meal="AI", departure_date=date(2026, 12, 15), is_active=True)
+        self.tour3 = Tour.objects.create(destination=self.destination2, title="Третий", slug="test-tour3", meal="BB", departure_date=date(2026, 12, 20), is_active=True)
+    
+        def test_filter_by_departure_date(self):
+            url = reverse("catalog:tour_list")
+            cases = [
+                ({"departure_from": "2026-12-15"}, [self.tour2, self.tour3]),
+                ({"departure_to": "2026-12-15"}, [self.tour1, self.tour2]),
+                (
+                    {"departure_from": "2026-12-10", "departure_to": "2026-12-15"},
+                    [self.tour1, self.tour2],
+                ),
+                (
+                    {"departure_from": "2026-12-15", "departure_to": "2026-12-15"},
+                    [self.tour2],
+                ),
+            ]
 
+            for params, expected_tours in cases:
+                with self.subTest(params=params):
+                    response = self.client.get(url, params)
+                    self.assertEqual(response.status_code, 200)
+                    self.assertCountEqual(response.context["tours"], expected_tours)
+
+        def test_reversed_departure_range_shows_error(self):
+            response = self.client.get(
+                reverse("catalog:tour_list"),
+                {"departure_from": "2026-12-20", "departure_to": "2026-12-10"},
+            )
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("departure_to", response.context["filter_form"].errors)
+            self.assertContains(response, "data-has-errors")
+    
     def test_filter_by_destination(self):
         response = self.client.get(reverse("catalog:tour_list"), {"destination": "china"})
 
@@ -308,3 +340,39 @@ class CatalogFilterTests(TestCase):
         tour = response.context["tours"][0]
         self.assertEqual(tour.destination_id, self.destination1.pk)
         self.assertEqual(tour.meal, "BB")
+
+    def test_price_range_matches_currency_and_basis(self):
+        Tour.objects.filter(pk=self.tour1.pk).update(price=Decimal("100000.00"), currency=Tour.Currency.RUB, price_basis=Tour.PriceBasis.PER_PERSON, price_from=True)
+        Tour.objects.filter(pk=self.tour2.pk).update(price=Decimal("100000.00"), currency=Tour.Currency.USD, price_basis=Tour.PriceBasis.PER_PERSON)
+        Tour.objects.filter(pk=self.tour3.pk).update(price=Decimal("100000.00"), currency=Tour.Currency.RUB, price_basis=Tour.PriceBasis.TOTAL, price_details="За 2 взрослых")
+
+        for slug, amount in (("below-budget", "79999.99"), ("above-budget", "100000.01"), ("without-price", None)):
+            price = Decimal(amount) if amount is not None else None
+            basis = Tour.PriceBasis.PER_PERSON if price is not None else ""
+            Tour.objects.create(destination=self.destination1, title=slug, slug=slug, is_active=True, price=price, currency=Tour.Currency.RUB, price_basis=basis)
+
+        response = self.client.get(reverse("catalog:tour_list"), {"price_min": "80000", "price_max": "100000", "currency": Tour.Currency.RUB, "price_basis": Tour.PriceBasis.PER_PERSON})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context["tours"], [self.tour1])
+
+    def test_price_requires_currency_and_basis(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"price_max": "100000"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("currency", response.context["filter_form"].errors)
+        self.assertIn("price_basis", response.context["filter_form"].errors)
+        self.assertCountEqual(response.context["tours"], [])
+
+    def test_reversed_price_range_shows_error(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"price_min": "100000", "price_max": "80000", "currency": Tour.Currency.RUB, "price_basis": Tour.PriceBasis.PER_PERSON})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("price_max", response.context["filter_form"].errors)
+        self.assertCountEqual(response.context["tours"], [])
+
+    def test_price_choices_without_amount_keep_unpriced_tours(self):
+        response = self.client.get(reverse("catalog:tour_list"), {"currency": Tour.Currency.RUB, "price_basis": Tour.PriceBasis.PER_PERSON})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context["tours"], [self.tour1, self.tour2, self.tour3])

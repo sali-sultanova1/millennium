@@ -3,6 +3,7 @@ from django.db.models import Case, F, When
 from django.shortcuts import get_object_or_404, render
 
 from .models import Destination, Tour
+from .forms import CatalogFilterForm
 
 
 def published_tours():
@@ -28,6 +29,8 @@ def search_options(tours):
 def tour_list_view(request):
     tours = published_tours()
     context = search_options(tours)
+    filter_form = CatalogFilterForm(request.GET)
+
     destination = request.GET.get("destination", "")
     meal = request.GET.get("meal", "")
     city = request.GET.get("city", "")
@@ -46,6 +49,27 @@ def tour_list_view(request):
         else:
             tours = tours.none()
 
+    if filter_form.is_valid():
+        data = filter_form.cleaned_data
+        departure_from = data["departure_from"]
+        departure_to = data["departure_to"]
+        price_min = data["price_min"]
+        price_max = data["price_max"]
+
+        if departure_from is not None:
+            tours = tours.filter(departure_date__gte=departure_from)
+        if departure_to is not None:
+            tours = tours.filter(departure_date__lte=departure_to)
+
+        if price_min is not None or price_max is not None:
+            tours = tours.filter(currency=data["currency"], price_basis=data["price_basis"])
+            if price_min is not None:
+                tours = tours.filter(price__gte=price_min)
+            if price_max is not None:
+                tours = tours.filter(price__lte=price_max)
+    else:
+        tours = tours.none()
+
     if sort == "date":
         tours = tours.order_by(F("departure_date").asc(nulls_last=True), *Tour._meta.ordering)
     elif sort == "title":
@@ -60,10 +84,10 @@ def tour_list_view(request):
         "selected_city": city,
         "selected_nights": nights,
         "selected_sort": sort,
-        "has_filters": any((destination, meal, city, nights)),
+        "filter_form": filter_form,
+        "has_filters": any((destination, meal, city, nights)) or filter_form.has_changed(),
     })
     return render(request, "catalog/tour_list.html", context)
-
 
 def tour_detail_view(request, slug):
     tour = get_object_or_404(published_tours(), slug=slug)
