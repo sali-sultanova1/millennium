@@ -1,0 +1,20 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>500 — Ошибка на сайте — Миллениум</title>
+    <link rel="stylesheet" href="{% static 'catalog/styles.css' %}">
+</head>
+<body>
+    <main class="wrap page confirmation">
+        <section class="empty">
+            <span class="empty-mark" aria-hidden="true">500</span>
+            <h1>Не удалось загрузить страницу</h1>
+            <p>Попробуйте открыть страницу чуть позже.</p>
+            <a class="btn primary" href="/">На главную</a>
+        </section>
+    </main>
+</body>
+</html>

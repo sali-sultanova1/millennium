@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}404 — Страница не найдена — Миллениум{% endblock %}
+
+{% block content %}
+<div class="wrap page confirmation">
+    <section class="empty">
+        <span class="empty-mark" aria-hidden="true">404</span>
+        <h1>Страница не найдена</h1>
+        <p>Возможно, ссылка устарела или в адресе есть опечатка.</p>
+        <div class="empty-actions">
+            <a class="btn primary" href="{% url 'catalog:tour_list' %}">Каталог туров</a>
+            <a class="btn secondary" href="{% url 'home' %}">На главную</a>
+        </div>
+    </section>
+</div>
+{% endblock %}

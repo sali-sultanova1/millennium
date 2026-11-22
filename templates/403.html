@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}403 — Доступ ограничен — Миллениум{% endblock %}
+
+{% block content %}
+<div class="wrap page confirmation">
+    <section class="empty">
+        <span class="empty-mark" aria-hidden="true">403</span>
+        <h1>Доступ ограничен</h1>
+        <p>У вас нет прав для просмотра этой страницы.</p>
+        <a class="btn primary" href="{% url 'home' %}">На главную</a>
+    </section>
+</div>
+{% endblock %}
