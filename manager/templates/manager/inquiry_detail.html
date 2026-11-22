@@ -1,0 +1,73 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Заявка №{{ inquiry.pk }} — Миллениум{% endblock %}
+
+{% block content %}
+<section class="wrap page">
+    <div class="manager-heading">
+        <div><a class="underlink" href="{% url 'manager:inquiry_list' %}">Все заявки</a><h1>Заявка №{{ inquiry.pk }}</h1></div>
+        <span class="manager-status">{{ inquiry.get_status_display }}</span>
+    </div>
+
+    <div class="inquiry-form">
+        <div class="field-grid">
+            <p><strong>Имя</strong><br>{{ inquiry.name }}</p>
+            <p><strong>Телефон</strong><br>{{ inquiry.phone }}</p>
+            <p><strong>Способ связи</strong><br>{{ inquiry.get_contact_method_display }}</p>
+            <p><strong>Ответственный</strong><br>{% if inquiry.assigned_to %}{{ inquiry.assigned_to.get_full_name|default:inquiry.assigned_to.username }}{% else %}Не назначен{% endif %}</p>
+            <p><strong>Источник</strong><br>{{ inquiry.get_source_display }}</p>
+            <p><strong>Получена</strong><br>{{ inquiry.created_at|date:"d.m.Y H:i" }}</p>
+        </div>
+
+        {% if inquiry.preferred_destinations or inquiry.departure_city or inquiry.departure_date_from or inquiry.departure_date_to or inquiry.nights_min or inquiry.nights_max or inquiry.adults != None or inquiry.children != None or inquiry.budget_max != None %}
+            <h2>Пожелания к поездке</h2>
+            <div class="field-grid">
+                {% if inquiry.preferred_destinations %}<p><strong>Направления</strong><br>{{ inquiry.preferred_destinations }}</p>{% endif %}
+                {% if inquiry.departure_city %}<p><strong>Город вылета</strong><br>{{ inquiry.departure_city }}</p>{% endif %}
+                {% if inquiry.departure_date_from or inquiry.departure_date_to %}<p><strong>Даты вылета</strong><br>{% if inquiry.departure_date_from %}с {{ inquiry.departure_date_from|date:"d.m.Y" }}{% endif %} {% if inquiry.departure_date_to %}по {{ inquiry.departure_date_to|date:"d.m.Y" }}{% endif %}</p>{% endif %}
+                {% if inquiry.nights_min or inquiry.nights_max %}<p><strong>Ночи</strong><br>{% if inquiry.nights_min %}от {{ inquiry.nights_min }}{% endif %} {% if inquiry.nights_max %}до {{ inquiry.nights_max }}{% endif %}</p>{% endif %}
+                {% if inquiry.adults != None %}<p><strong>Взрослых</strong><br>{{ inquiry.adults }}</p>{% endif %}
+                {% if inquiry.children != None %}<p><strong>Детей</strong><br>{{ inquiry.children }}{% if inquiry.children_ages %}, возраст: {{ inquiry.children_ages }}{% endif %}</p>{% endif %}
+                {% if inquiry.budget_max != None %}<p><strong>Бюджет до</strong><br>{{ inquiry.budget_max }} {{ inquiry.budget_currency }}</p>{% endif %}
+            </div>
+        {% endif %}
+
+        {% if inquiry.comment %}<p><strong>Комментарий</strong><br>{{ inquiry.comment|linebreaksbr }}</p>{% endif %}
+
+        {% if inquiry.selected_tours.all %}
+            <h2>Выбранные туры</h2>
+            <div class="field-grid">
+                {% for item in inquiry.selected_tours.all %}
+                    <p>
+                        <strong>{{ item.title_snapshot }}</strong><br>{{ item.destination_snapshot }}
+                        {% if item.departure_date_snapshot %} · {{ item.departure_date_snapshot|date:"d.m.Y" }}{% endif %}
+                        {% if item.price_snapshot != None %}<br>{% if item.price_from_snapshot %}от {% endif %}{{ item.price_snapshot }} {{ item.currency_snapshot }} {{ item.price_basis_snapshot }}{% endif %}
+                        {% if item.price_details_snapshot %}<br>{{ item.price_details_snapshot }}{% endif %}
+                    </p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if perms.inquiries.change_inquiry %}
+            <div class="manager-actions">
+                {% if not inquiry.assigned_to_id and inquiry.status != "closed" %}
+                    <form method="post" action="{% url 'manager:inquiry_work' inquiry.pk %}">
+                        {% csrf_token %}
+                        <button class="btn primary" type="submit" name="action" value="claim">Взять в работу</button>
+                    </form>
+                {% elif inquiry.assigned_to_id == user.id and inquiry.status == "in_progress" %}
+                    <form method="post" action="{% url 'manager:inquiry_work' inquiry.pk %}">
+                        {% csrf_token %}
+                        <button class="btn primary" type="submit" name="action" value="close">Завершить заявку</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if inquiry.status == "closed" and perms.inquiries.delete_inquiry %}
+            <div class="manager-actions">
+                <a class="btn secondary manager-delete" href="{% url 'manager:inquiry_delete' inquiry.pk %}">Удалить заявку</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

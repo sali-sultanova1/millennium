@@ -1,0 +1,7 @@
+.manager-login { max-width: 30rem; }
+.manager-table-wrap { overflow-x: auto; }
+.manager-table { width: 100%; border-collapse: collapse; }
+.manager-table th,
+.manager-table td { padding: .75rem 1rem; text-align: start; border-bottom: 1px solid var(--edge); }
+.manager-table thead { background: var(--wash); }
+.manager-table tbody tr:last-child td { border-bottom: 0; }

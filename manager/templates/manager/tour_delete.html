@@ -1,0 +1,18 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Удаление тура — Миллениум{% endblock %}
+
+{% block content %}
+<section class="wrap page manager-login">
+    <div class="inquiry-form">
+        <h1>Удалить тур?</h1>
+        <p>«{{ tour.title }}» будет удалён из кабинета и каталога.</p>
+        <form class="manager-actions" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="revision" value="{{ revision }}">
+            <a class="btn secondary" href="{% url 'manager:tour_list' %}">Отмена</a>
+            <button class="btn primary" type="submit">Да, удалить</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

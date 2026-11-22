@@ -1,0 +1,44 @@
+{% load static i18n %}
+{% language "ru" %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Кабинет менеджера — Миллениум{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'catalog/styles.css' %}">
+</head>
+<body class="manager-shell">
+    <a class="skip" href="#main">К содержимому</a>
+
+    <header class="manager-top">
+        <div class="wrap manager-bar">
+            <a class="brand" href="{% url 'manager:tour_list' %}">{% include "catalog/partials/brand.html" %}</a>
+            <div class="manager-actions">
+                <nav class="manager-nav" aria-label="Разделы кабинета">
+                    {% with current=request.resolver_match.url_name %}
+                        {% if perms.catalog.view_tour %}<a href="{% url 'manager:tour_list' %}"{% if current == 'tour_list' or current == 'tour_create' or current == 'tour_edit' or current == 'tour_delete' %} aria-current="true"{% endif %}>Туры</a>{% endif %}
+                        {% if perms.catalog.view_destination %}<a href="{% url 'manager:destination_list' %}"{% if current == 'destination_list' or current == 'destination_create' or current == 'destination_edit' or current == 'destination_delete' %} aria-current="true"{% endif %}>Направления</a>{% endif %}
+                        {% if perms.inquiries.view_inquiry %}<a href="{% url 'manager:inquiry_list' %}"{% if current == 'inquiry_list' or current == 'inquiry_detail' or current == 'inquiry_delete' %} aria-current="true"{% endif %}>Заявки</a>{% endif %}
+                    {% endwith %}
+                </nav>
+                <a class="underlink" href="{% url 'home' %}">На сайт</a>
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'manager:logout' %}">
+                        {% csrf_token %}
+                        <button class="btn secondary" type="submit">Выйти</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+        {% for message in messages %}
+            <p class="wrap manager-message {{ message.tags }}" role="status">{{ message }}</p>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
+{% endlanguage %}

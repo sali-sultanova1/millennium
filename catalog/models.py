@@ -10,6 +10,7 @@ class Destination(models.Model):
     slug = models.SlugField(max_length=120, unique=True, verbose_name="Адрес в URL")
     is_active = models.BooleanField(default=True, verbose_name="Активно?")
     sort_order = models.PositiveIntegerField(default=0, verbose_name="Порядок отображения")
+    image = models.ImageField(upload_to="destinations/%Y/%m/", blank=True, verbose_name="Фото направления")
 
     class Meta:
         ordering = ["sort_order", "name"]

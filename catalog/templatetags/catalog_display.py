@@ -16,6 +16,8 @@ DESTINATION_PHOTOS = {
 
 @register.filter
 def destination_photo(destination, size="large"):
+    if destination.image:
+        return destination.image.url
     name = destination.name.strip().casefold()
     key = DESTINATION_PHOTOS.get(name) or DESTINATION_PHOTOS.get(destination.slug.casefold())
     suffix = "-480" if size == "small" else ""

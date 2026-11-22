@@ -1,0 +1,26 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Удаление направления — Миллениум{% endblock %}
+
+{% block content %}
+<section class="wrap page manager-login">
+    <div class="inquiry-form">
+        <h1>Удалить направление?</h1>
+
+        {% if has_tours %}
+            <p>К направлению «{{ destination.name }}» привязаны туры. Его можно скрыть на сайте в форме редактирования.</p>
+            <div class="manager-actions">
+                <a class="btn secondary" href="{% url 'manager:destination_list' %}">К направлениям</a>
+                {% if perms.catalog.change_destination %}<a class="btn primary" href="{% url 'manager:destination_edit' destination.pk %}">Редактировать</a>{% endif %}
+            </div>
+        {% else %}
+            <p>Направление «{{ destination.name }}» исчезнет из кабинета и каталога.</p>
+            <form class="manager-actions" method="post">
+                {% csrf_token %}
+                <a class="btn secondary" href="{% url 'manager:destination_list' %}">Отмена</a>
+                <button class="btn primary" type="submit">Да, удалить</button>
+            </form>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

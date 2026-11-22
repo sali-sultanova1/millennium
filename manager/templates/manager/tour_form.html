@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{% if tour %}Редактирование тура{% else %}Новый тур{% endif %} — Миллениум{% endblock %}
+
+{% block content %}
+<header class="page-banner">
+    <div class="wrap">
+        <nav class="crumbs" aria-label="Хлебные крошки">
+            <a href="{% url 'manager:tour_list' %}">Туры</a>
+            <span aria-current="page">Черновик</span>
+        </nav>
+        <h1>{% if tour %}Редактирование тура{% else %}Новый тур{% endif %}</h1>
+        <p>Заполните название и направление. Остальные данные можно добавить позже.</p>
+    </div>
+</header>
+
+<div class="wrap page">
+    <form class="inquiry-form" method="post">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+        <div class="field-grid">
+            {% for field in form.visible_fields %}
+                {% if field.name == "description" or field.name == "meal_details" %}
+                    {% include "inquiries/partials/field.html" with field=field wide=True only %}
+                {% else %}
+                    {% include "inquiries/partials/field.html" with field=field only %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <button class="btn primary" type="submit">{% if tour.is_active %}Сохранить изменения{% else %}Сохранить черновик{% endif %}</button>
+    </form>
+</div>
+{% endblock %}

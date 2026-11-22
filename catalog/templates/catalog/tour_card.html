@@ -5,7 +5,7 @@
     <div class="card-media{% if not cover and not landscape %} type-tile{% endif %}">
         <a href="{{ tour_url }}" class="cover-link" tabindex="-1" aria-hidden="true">
             {% if cover %}<img src="{{ cover.image.url }}" alt="" width="720" height="420" loading="lazy" decoding="async">
-            {% elif landscape %}<img src="{{ small }}" srcset="{{ small }} 480w, {{ landscape }} 1120w" sizes="(max-width: 640px) 92vw, (max-width: 960px) 47vw, 400px" alt="" width="720" height="420" loading="lazy" decoding="async">
+            {% elif landscape %}<img src="{{ small }}"{% if not tour.destination.image %} srcset="{{ small }} 480w, {{ landscape }} 1120w" sizes="(max-width: 640px) 92vw, (max-width: 960px) 47vw, 400px"{% endif %} alt="" width="720" height="420" loading="lazy" decoding="async">
             {% else %}<span class="type-title">{{ tour.destination.name }}</span>{% endif %}
         </a>
         {% if not cover and landscape %}<span class="photo-note">Фото направления</span>{% endif %}

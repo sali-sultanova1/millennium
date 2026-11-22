@@ -1,0 +1,45 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Заявки — кабинет менеджера{% endblock %}
+
+{% block content %}
+<section class="wrap page">
+    <div class="manager-heading">
+        <h1>Заявки</h1>
+        <a class="btn {% if mine %}dark{% else %}secondary{% endif %}" href="{% if mine %}{% querystring status=status scope=None page=None %}{% else %}{% querystring status=status scope='mine' page=None %}{% endif %}">{% if mine %}Показать все заявки{% else %}Только мои{% endif %}</a>
+    </div>
+
+    <nav class="manager-tabs" aria-label="Статус заявки">
+        {% for value, label in tabs %}
+            <a href="{% querystring status=value page=None %}"{% if status == value %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+    </nav>
+
+    <div class="manager-tours">
+        {% for inquiry in page_obj %}
+            <article class="surface manager-tour manager-inquiry">
+                <div>
+                    <h2><a href="{% url 'manager:inquiry_detail' inquiry.pk %}">№{{ inquiry.pk }} — {{ inquiry.name }}</a></h2>
+                    <small>{{ inquiry.get_source_display }}</small>
+                </div>
+                <div>{{ inquiry.created_at|date:"d.m.Y" }}</div>
+                <div><span class="manager-status{% if inquiry.status == 'new' %} draft{% elif inquiry.status == 'in_progress' %} live{% endif %}">{{ inquiry.get_status_display }}</span></div>
+                <div>
+                    <small>Ответственный</small>
+                    <div>{% if inquiry.assigned_to %}{{ inquiry.assigned_to.get_full_name|default:inquiry.assigned_to.username }}{% else %}Не назначен{% endif %}</div>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty"><p>{% if status == 'closed' %}В архиве пока пусто.{% else %}В этой категории заявок пока нет.{% endif %}</p></div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <nav class="pagination" aria-label="Страницы заявок">
+            {% if page_obj.has_previous %}<a class="btn secondary" href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
+            <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}<a class="btn secondary" href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
+        </nav>
+    {% endif %}
+</section>
+{% endblock %}

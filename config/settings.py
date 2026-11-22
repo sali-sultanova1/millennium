@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "catalog",
     "inquiries",
     "pages",
+    "manager.apps.ManagerConfig",
 ]
 
 MIDDLEWARE = [

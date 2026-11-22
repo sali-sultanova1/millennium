@@ -1,0 +1,25 @@
+{% extends "manager/base.html" %}
+
+{% block title %}{% if destination %}Редактировать направление{% else %}Новое направление{% endif %} — Миллениум{% endblock %}
+
+{% block content %}
+<div class="wrap page manager-login">
+    <div class="manager-heading">
+        <h1>{% if destination %}Редактировать направление{% else %}Новое направление{% endif %}</h1>
+    </div>
+
+    <form class="inquiry-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        {% include "inquiries/partials/field.html" with field=form.name only %}
+        {% if destination.image %}<img class="direction-cover" src="{{ destination.image.url }}" alt="Текущая обложка">{% endif %}
+        {% include "inquiries/partials/field.html" with field=form.image only %}
+        <label>{{ form.is_active }} {{ form.is_active.label }}</label>
+
+        <div class="manager-actions">
+            <button class="btn primary" type="submit">Сохранить</button>
+            <a class="btn secondary" href="{% url 'manager:destination_list' %}">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

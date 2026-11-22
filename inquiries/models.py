@@ -4,13 +4,14 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from catalog.models import Tour
+from django.conf import settings
 
 
 class Inquiry(models.Model):
     class Status(models.TextChoices):
         NEW = "new", "Новая"
         IN_PROGRESS = "in_progress", "В работе"
-        CLOSED = "closed", "Закрыта"
+        CLOSED = "closed", "Завершена"
 
     class Source(models.TextChoices):
         TOUR = "tour", "Страница тура"
@@ -41,6 +42,7 @@ class Inquiry(models.Model):
     budget_currency = models.CharField(max_length=3, choices=Tour.Currency.choices, blank=True, verbose_name="Валюта бюджета")
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW, verbose_name="Статус")
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_inquiries", verbose_name="Ответственный")
     source = models.CharField(max_length=20, choices=Source.choices, verbose_name="Источник заявки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 

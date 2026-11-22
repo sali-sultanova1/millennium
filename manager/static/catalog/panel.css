@@ -1,0 +1,26 @@
+.manager-top { background: #fff; border-bottom: 1px solid var(--edge); }
+.manager-bar, .manager-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .9rem; }
+.manager-bar { padding-block: .85rem; }
+.manager-heading { margin-bottom: 1.25rem; }
+.manager-heading h1, .manager-shell .page-banner h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+.manager-heading p, .manager-tour small { color: var(--muted); }
+.manager-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .55rem; }
+.manager-tours { display: grid; gap: .7rem; }
+.manager-tour { display: grid; grid-template-columns: minmax(0, 1fr) 8rem minmax(7.5rem, auto) auto; align-items: center; gap: 1rem; padding: 1rem; }
+.manager-tour h2 { font-size: 1.15rem; overflow-wrap: anywhere; }
+.manager-tour h2 a { text-decoration: none; }
+.manager-tour h2 a:hover { text-decoration: underline; }
+.manager-tour-actions { justify-content: flex-end; }
+.manager-status { display: inline-block; padding: .25rem .65rem; border-radius: 1rem; background: #e9eff4; color: #364b5e; font-size: .85rem; }
+.manager-status.draft { background: #fff1d4; color: #704800; }
+.manager-status.live { background: #e3f4e9; color: #205a3e; }
+.manager-message { margin-top: 1rem; padding: .65rem .85rem; border-radius: .6rem; background: #e3f4e9; color: #205a3e; }
+.manager-message.error { background: #fae9ee; color: #8d233a; }
+.manager-login { max-width: 32rem; }
+.manager-shell .page-banner { padding-block: 1.3rem 0; background: none; border: 0; }
+
+@media (max-width: 48rem) {
+    .manager-tour { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .manager-tour > :first-child, .manager-tour-actions { grid-column: 1 / -1; }
+    .manager-tour-actions { justify-content: flex-start; }
+}

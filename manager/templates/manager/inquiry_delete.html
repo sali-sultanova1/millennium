@@ -1,0 +1,17 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Удаление заявки — Миллениум{% endblock %}
+
+{% block content %}
+<section class="wrap page manager-login">
+    <div class="inquiry-form">
+        <h1>Удалить заявку?</h1>
+        <p>Заявка №{{ inquiry.pk }} от {{ inquiry.name }} будет удалена без возможности восстановления.</p>
+        <form class="manager-actions" method="post">
+            {% csrf_token %}
+            <a class="btn secondary" href="{% url 'manager:inquiry_detail' inquiry.pk %}">Отмена</a>
+            <button class="btn primary" type="submit">Да, удалить</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

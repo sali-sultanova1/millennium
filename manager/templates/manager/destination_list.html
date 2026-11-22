@@ -1,0 +1,47 @@
+{% extends "manager/base.html" %}
+{% load catalog_display %}
+
+{% block title %}Направления — кабинет менеджера{% endblock %}
+
+{% block content %}
+<section class="wrap page">
+    <div class="manager-heading">
+        <h1>Направления</h1>
+        {% if perms.catalog.add_destination %}
+            <a class="btn primary" href="{% url 'manager:destination_create' %}">Добавить направление</a>
+        {% endif %}
+    </div>
+
+    <div class="manager-tours">
+        {% for destination in page_obj %}
+            <article class="surface manager-tour manager-direction">
+                <div class="manager-direction-title">
+                    {% with photo=destination|destination_photo:"small" %}
+                        {% if photo %}<img src="{{ photo }}" width="56" height="56" alt="" loading="lazy">{% endif %}
+                    {% endwith %}
+                    <h2>{{ destination.name }}</h2>
+                </div>
+                <div><span class="manager-status {% if destination.is_active %}live{% endif %}">{{ destination.is_active|yesno:"На сайте,Скрыто" }}</span></div>
+                <div class="manager-actions">
+                    {% if perms.catalog.change_destination %}
+                        <a class="btn secondary" href="{% url 'manager:destination_edit' destination.pk %}">Редактировать</a>
+                    {% endif %}
+                    {% if perms.catalog.delete_destination %}
+                        <a class="underlink" href="{% url 'manager:destination_delete' destination.pk %}">Удалить</a>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty"><p>Направлений пока нет.</p></div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <nav class="pagination" aria-label="Страницы направлений">
+            {% if page_obj.has_previous %}<a class="btn secondary" href="{% querystring page=page_obj.previous_page_number %}">Назад</a>{% endif %}
+            <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}<a class="btn secondary" href="{% querystring page=page_obj.next_page_number %}">Далее</a>{% endif %}
+        </nav>
+    {% endif %}
+</section>
+{% endblock %}
