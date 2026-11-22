@@ -2,6 +2,7 @@ from django import forms
 
 from catalog.models import Destination, Tour
 
+
 class TourDraftForm(forms.ModelForm):
     revision = forms.CharField(required=False, widget=forms.HiddenInput)
 
