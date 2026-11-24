@@ -101,3 +101,26 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+MEDIA_USE_S3 = env.bool("MEDIA_USE_S3", default=False)
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
+if MEDIA_USE_S3:
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "bucket_name": env("MEDIA_S3_BUCKET_NAME"),
+            "access_key": env("MEDIA_S3_ACCESS_KEY_ID"),
+            "secret_key": env("MEDIA_S3_SECRET_ACCESS_KEY"),
+            "endpoint_url": "https://storage.yandexcloud.net",
+            "region_name": "ru-central1",
+            "addressing_style": "path",
+            "signature_version": "s3v4",
+            "querystring_auth": True,
+            "file_overwrite": False,
+        },
+    }

@@ -14,5 +14,5 @@ urlpatterns = [
     path("", include("pages.urls")),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG and not settings.MEDIA_USE_S3:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
