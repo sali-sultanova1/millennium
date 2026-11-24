@@ -5,8 +5,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.http import HttpResponseBadRequest, JsonResponse
 from django.db.models.deletion import ProtectedError
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_POST
@@ -15,6 +15,7 @@ from catalog.models import Destination, Tour
 
 from .forms import DestinationForm, TourDraftForm, TourPhotoForm
 from .tour_photos import order_tour_photos, remove_tour_photo, save_tour_photos
+
 
 @never_cache
 @login_required(login_url="manager:login")
