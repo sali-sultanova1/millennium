@@ -1,6 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{% if tour %}Редактирование тура{% else %}Новый тур{% endif %} — Миллениум{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'catalog/tour-gallery.css' %}?v=3">
+<script src="{% static 'catalog/tour-gallery.js' %}?v=3" defer></script>
+{% endblock %}
 
 {% block content %}
 <header class="page-banner">
@@ -15,7 +21,7 @@
 </header>
 
 <div class="wrap page">
-    <form class="inquiry-form" method="post">
+    <form class="inquiry-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -23,15 +29,91 @@
         {% endif %}
         {% for field in form.hidden_fields %}{{ field }}{% endfor %}
 
-        <div class="field-grid">
-            {% for field in form.visible_fields %}
-                {% if field.name == "description" or field.name == "meal_details" %}
-                    {% include "inquiries/partials/field.html" with field=field wide=True only %}
-                {% else %}
-                    {% include "inquiries/partials/field.html" with field=field only %}
-                {% endif %}
+    <div class="field-grid">
+        {% for field in form.visible_fields %}
+            {% if field.name == "description" or field.name == "meal_details" %}
+                {% include "inquiries/partials/field.html" with field=field wide=True only %}
+            {% elif field.name != "photos" %}
+                {% include "inquiries/partials/field.html" with field=field only %}
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <fieldset class="form-group" data-tour-gallery>
+        <legend>Фотографии тура</legend>
+        <p class="form-hint" data-gallery-hint hidden>
+            Нажмите на фото для просмотра. Меняйте порядок перетаскиванием или кнопками ← и →.
+            Первое фото станет обложкой.
+        </p>
+
+        <div class="manager-photo-grid" data-gallery-grid role="region"
+            aria-label="Лента фотографий" tabindex="0">
+            {% for photo, photo_form in photo_forms %}
+                <div class="manager-photo" data-photo-key="saved-{{ photo.pk }}"
+                    data-photo-delete-url="{% url 'manager:tour_photo_delete' tour.pk photo.pk %}">
+                    <a class="manager-photo-preview" href="{{ photo.image.url }}"
+                    data-photo-preview aria-label="Посмотреть фото крупнее" draggable="false">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.alt_text|default:'Фото тура' }}"
+                            width="320" height="200" loading="lazy" draggable="false">
+                    </a>
+                    <small class="muted" data-photo-cover{% if not forloop.first %} hidden{% endif %}>Обложка</small>
+                    <label data-photo-delete-fallback>{{ photo_form.delete }} Удалить при сохранении</label>
+                </div>
             {% endfor %}
         </div>
+
+        <template data-gallery-photo>
+            <div class="manager-photo">
+                <a class="manager-photo-preview" data-photo-preview
+                aria-label="Посмотреть фото крупнее" draggable="false">
+                    <img width="320" height="200" alt="Новое фото тура" draggable="false">
+                </a>
+                <small class="muted" data-photo-cover hidden>Обложка</small>
+            </div>
+        </template>
+
+        <template data-gallery-buttons>
+            <div class="manager-photo-actions">
+                <div class="manager-photo-buttons">
+                    <button type="button" class="btn secondary" data-photo-move="-1"
+                            aria-label="Переместить фото влево">←</button>
+                    <button type="button" class="btn secondary" data-photo-move="1"
+                            aria-label="Переместить фото вправо">→</button>
+                </div>
+                <button type="button" class="btn manager-photo-remove" data-photo-remove>Удалить</button>
+            </div>
+        </template>
+
+        <dialog class="manager-photo-dialog" data-gallery-dialog aria-labelledby="tour-photo-preview-title">
+            <div class="manager-photo-dialog-header">
+                <h2 id="tour-photo-preview-title">Фото тура</h2>
+                <button type="button" class="btn secondary" data-gallery-close autofocus>Закрыть</button>
+            </div>
+            <img alt="" data-gallery-full-image>
+        </dialog>
+
+        <dialog class="manager-photo-confirm" data-photo-confirm
+                aria-labelledby="tour-photo-confirm-title"
+                aria-describedby="tour-photo-confirm-text">
+            <h2 id="tour-photo-confirm-title">Удалить фото?</h2>
+            <p id="tour-photo-confirm-text" data-photo-confirm-text></p>
+            <div class="manager-photo-confirm-actions">
+                <button type="button" class="btn secondary" data-photo-confirm-cancel autofocus>
+                    Отмена
+                </button>
+                <button type="button" class="btn primary" data-photo-confirm-delete>
+                    Удалить фото
+                </button>
+            </div>
+        </dialog>
+
+        <p class="sr-only" role="status" data-gallery-status></p>
+        <p class="alert" role="alert" data-gallery-error hidden></p>
+        {{ form.photo_order.errors }}
+        <div data-gallery-upload>
+            {% include "inquiries/partials/field.html" with field=form.photos only %}
+        </div>
+    </fieldset>
 
         <button class="btn primary" type="submit">{% if tour.is_active %}Сохранить изменения{% else %}Сохранить черновик{% endif %}</button>
     </form>

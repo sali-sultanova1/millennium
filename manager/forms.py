@@ -3,9 +3,26 @@ from django import forms
 from catalog.models import Destination, Tour
 
 
+class MultipleImageInput(forms.FileInput):
+    allow_multiple_selected = True
+
+
+class MultipleImageField(forms.ImageField):
+    widget = MultipleImageInput
+
+    def clean(self, data, initial=None):
+        clean_image = super().clean
+        return [clean_image(upload, initial) for upload in data or []]
+
+
+class TourPhotoForm(forms.Form):
+    delete = forms.BooleanField(label="Удалить", required=False)
+
 class TourDraftForm(forms.ModelForm):
     revision = forms.CharField(required=False, widget=forms.HiddenInput)
-
+    photo_order = forms.JSONField(required=False, widget=forms.HiddenInput)
+    photos = MultipleImageField(label="Добавить фотографии", required=False)
+    
     class Meta:
         model = Tour
         fields = (

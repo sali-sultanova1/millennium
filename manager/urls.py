@@ -9,6 +9,7 @@ urlpatterns = [
     path("", views.tour_list_view, name="tour_list"),
     path("tours/new/", views.tour_draft_view, name="tour_create"),
     path("tours/<int:pk>/edit/", views.tour_draft_view, name="tour_edit"),
+    path("tours/<int:pk>/photos/<int:photo_pk>/delete/", views.tour_photo_delete_view, name="tour_photo_delete"),
     path("tours/<int:pk>/publication/", views.tour_publication_view, name="tour_publication"),
     path("directions/", views.destination_list_view, name="destination_list"),
     path("directions/new/", views.destination_form_view, name="destination_create"),
