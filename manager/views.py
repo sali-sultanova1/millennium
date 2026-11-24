@@ -6,16 +6,12 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models.deletion import ProtectedError
-from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods, require_POST
 
 from catalog.models import Destination, Tour
-
-from .forms import DestinationForm, TourDraftForm
 from .forms import DestinationForm, TourDraftForm, TourPhotoForm
-from .tour_photos import order_tour_photos, save_tour_photos
 from django.http import HttpResponseBadRequest, JsonResponse
 from .tour_photos import order_tour_photos, remove_tour_photo, save_tour_photos
 
@@ -205,45 +201,3 @@ def tour_delete_view(request, pk):
 
     tour = get_object_or_404(Tour, pk=pk)
     return render(request, "manager/tour_delete.html", {"tour": tour, "revision": tour.updated_at.isoformat()})
-
-@never_cache
-@login_required(login_url="manager:login")
-@permission_required("catalog.view_tour", raise_exception=True)
-@require_http_methods(["GET", "POST"])
-def tour_draft_view(request, pk=None):
-    permission = "catalog.add_tour" if pk is None else "catalog.change_tour"
-    if not request.user.has_perm(permission):
-        raise PermissionDenied
-
-    is_post = request.method == "POST"
-    data = request.POST if is_post else None
-    files = request.FILES if is_post else None
-
-    with transaction.atomic():
-        tour = None
-        if pk is not None:
-            tours = Tour.objects.select_for_update() if is_post else Tour.objects.all()
-            tour = get_object_or_404(tours, pk=pk)
-
-        revision = tour.updated_at.isoformat() if tour else ""
-        form = TourDraftForm(data, files, instance=tour, initial={"revision": revision})
-        photos = tour.images.all() if tour else []
-        photo_forms = [
-            (photo, TourPhotoForm(data, prefix=f"photo-{photo.pk}", initial={"sort_order": photo.sort_order}))
-            for photo in photos
-        ]
-
-        if is_post:
-            photos_valid = all([photo_form.is_valid() for _, photo_form in photo_forms])
-            if form.is_valid() and photos_valid:
-                if tour and form.cleaned_data["revision"] != revision:
-                    form.add_error(None, "Тур уже изменился. Откройте его заново, чтобы увидеть актуальные данные.")
-                else:
-                    draft = form.save(commit=False)
-                    if pk is None:
-                        draft.slug = f"tour-{uuid4().hex}"
-                    draft.save()
-                    save_tour_photos(draft, photo_forms, form.cleaned_data["photos"])
-                    return redirect("manager:tour_list")
-
-    return render(request, "manager/tour_form.html", {"form": form, "tour": tour, "photo_forms": photo_forms})
