@@ -42,7 +42,10 @@ def inquiry_detail_view(request, pk):
     inquiry = get_object_or_404(inquiries, pk=pk)
     return render(request, "manager/inquiry_detail.html", {"inquiry": inquiry})
 
-
+@never_cache
+@login_required(login_url="manager:login")
+@permission_required(("inquiries.view_inquiry", "inquiries.change_inquiry"), raise_exception=True)
+@require_POST
 def inquiry_work_view(request, pk):
     inquiry = Inquiry.objects.filter(pk=pk)
     action = request.POST.get("action")
