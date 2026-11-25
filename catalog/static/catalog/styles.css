@@ -601,3 +601,5 @@ textarea { resize: vertical; }
 .manager-photo-buttons { display: flex; gap: .4rem; }
 .manager-photo-buttons .btn { padding-inline: .75rem; }
 .manager-photo [data-photo-remove] { justify-self: start; border: 0; background: transparent; }
+.direction-photo-editor { display: grid; gap: .65rem; }
+.direction-photo-remove { display: flex; align-items: center; gap: .45rem; font-size: .9rem; }

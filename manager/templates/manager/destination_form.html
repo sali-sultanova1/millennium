@@ -12,7 +12,6 @@
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
         {% include "inquiries/partials/field.html" with field=form.name only %}
-        {% if destination.image %}<img class="direction-cover" src="{{ destination.image.url }}" alt="Текущая обложка">{% endif %}
         {% include "inquiries/partials/field.html" with field=form.image only %}
         <label>{{ form.is_active }} {{ form.is_active.label }}</label>
 

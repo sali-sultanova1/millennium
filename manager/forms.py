@@ -37,6 +37,15 @@ class TourDraftForm(forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 5}),
         }
 
+class DestinationImageInput(forms.ClearableFileInput):
+    template_name = "manager/widgets/destination_image.html"
+
+    def value_from_datadict(self, data, files, name):
+        if name in files:
+            self.checked = False
+            return files.get(name)
+        return super().value_from_datadict(data, files, name)
+
 class DestinationForm(forms.ModelForm):
     class Meta:
         model = Destination
