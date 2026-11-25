@@ -1,14 +1,20 @@
-{% extends "base.html" %}
+{% extends error_base|default:"base.html" %}
 
-{% block title %}403 — Доступ ограничен — Миллениум{% endblock %}
+{% block title %}403 — {% if csrf_failed %}Форма не отправлена{% else %}Доступ ограничен{% endif %} — Миллениум{% endblock %}
 
 {% block content %}
 <div class="wrap page confirmation">
     <section class="empty">
         <span class="empty-mark" aria-hidden="true">403</span>
-        <h1>Доступ ограничен</h1>
-        <p>У вас нет прав для просмотра этой страницы.</p>
-        <a class="btn primary" href="{% url 'home' %}">На главную</a>
+        {% if csrf_failed %}
+            <h1>Не удалось отправить форму</h1>
+            <p>Откройте страницу заново и повторите действие.</p>
+            <a class="btn primary" href="{{ return_url }}">{{ return_label }}</a>
+        {% else %}
+            <h1>Доступ ограничен</h1>
+            <p>У вас нет прав для просмотра этой страницы.</p>
+            <a class="btn primary" href="{% url 'home' %}">На главную</a>
+        {% endif %}
     </section>
 </div>
 {% endblock %}

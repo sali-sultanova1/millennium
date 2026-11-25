@@ -1,6 +1,11 @@
 {% extends "manager/base.html" %}
+{% load static %}
 
 {% block title %}{% if destination %}Редактировать направление{% else %}Новое направление{% endif %} — Миллениум{% endblock %}
+
+{% block extra_head %}
+<script src="{% static 'manager/destination-photo.js' %}" defer></script>
+{% endblock %}
 
 {% block content %}
 <div class="wrap page manager-login">
@@ -12,7 +17,32 @@
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
         {% include "inquiries/partials/field.html" with field=form.name only %}
-        {% include "inquiries/partials/field.html" with field=form.image only %}
+        {% with current_photo=form.image.value %}
+        <div class="form-field direction-photo-editor{% if form.image.errors %} has-error{% endif %}" data-direction-photo>
+            <label for="{{ form.image.id_for_label }}">{{ form.image.label }}</label>
+            <figure data-photo-preview{% if not current_photo %} hidden{% endif %}>
+                <button class="direction-photo-preview" type="button" data-photo-open aria-label="Посмотреть фото крупнее" disabled>
+                    <img class="direction-cover" data-photo-image{% if current_photo %} src="{{ current_photo.url }}"{% endif %} alt="Фото направления">
+                </button>
+                <figcaption class="muted" data-photo-caption>Текущее фото</figcaption>
+            </figure>
+            <p class="form-hint" data-photo-error hidden>Фото недоступно. Выберите файл для замены.</p>
+            <div class="direction-photo-upload">
+                {{ form.image }}
+                <label class="btn secondary" for="{{ form.image.id_for_label }}" data-photo-select hidden>
+                    {% if current_photo %}Заменить фото{% else %}Выбрать фото{% endif %}
+                </label>
+            </div>
+            {% if form.image.errors %}<ul id="{{ form.image.auto_id }}_error" class="field-errors">{% for error in form.image.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            <dialog class="photo-dialog direction-photo-dialog" aria-labelledby="direction-photo-title">
+                <div class="viewer-head">
+                    <p class="viewer-caption" id="direction-photo-title">Фото направления</p>
+                    <button class="viewer-close" type="button" data-photo-close aria-label="Закрыть просмотр" autofocus>×</button>
+                </div>
+                <div class="viewer-frame"><img data-photo-full alt="Фото направления"></div>
+            </dialog>
+        </div>
+        {% endwith %}
         <label>{{ form.is_active }} {{ form.is_active.label }}</label>
 
         <div class="manager-actions">

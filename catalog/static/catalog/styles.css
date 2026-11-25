@@ -602,4 +602,10 @@ textarea { resize: vertical; }
 .manager-photo-buttons .btn { padding-inline: .75rem; }
 .manager-photo [data-photo-remove] { justify-self: start; border: 0; background: transparent; }
 .direction-photo-editor { display: grid; gap: .65rem; }
-.direction-photo-remove { display: flex; align-items: center; gap: .45rem; font-size: .9rem; }
+.direction-photo-editor figure { display: grid; justify-items: start; gap: .35rem; margin: 0; }
+.direction-photo-editor > label { margin: 0; }
+.direction-photo-preview { display: block; width: min(100%, 20rem); padding: 0; border: 0; background: transparent; }
+.direction-photo-preview:enabled { cursor: zoom-in; }
+.direction-photo-upload input.sr-only { width: 1px; min-height: 0; padding: 0; }
+.direction-photo-upload:focus-within .btn { outline: 2px solid var(--navy); outline-offset: 3px; }
+.direction-photo-dialog .viewer-close { font-size: 1.45rem; }
