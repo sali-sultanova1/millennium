@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from django import forms
+from django.utils import timezone
 
 from .models import Tour
 
@@ -13,8 +14,19 @@ class CatalogFilterForm(forms.Form):
     currency = forms.ChoiceField(label="Валюта", required=False, choices=[("", "Выберите валюту"), *Tour.Currency.choices], widget=forms.Select(attrs={"form": "catalog-search"}))
     price_basis = forms.ChoiceField(label="Цена указана", required=False, choices=[("", "Выберите вариант"), *Tour.PriceBasis.choices], widget=forms.Select(attrs={"form": "catalog-search"}))
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.today = timezone.localdate()
+        for name in ("departure_from", "departure_to"):
+            self.fields[name].widget.attrs["min"] = self.today.isoformat()
+
     def clean(self):
         data = super().clean()
+        for name in ("departure_from", "departure_to"):
+            value = data.get(name)
+            if value is not None and value < self.today:
+                self.add_error(name, "Выберите сегодняшнюю дату или позже.")
+
         departure_from = data.get("departure_from")
         departure_to = data.get("departure_to")
         price_min = data.get("price_min")
