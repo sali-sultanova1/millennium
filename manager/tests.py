@@ -4,9 +4,67 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from accounts.models import User
+from catalog.models import Destination, Tour
 from inquiries.models import Inquiry
 
 from .signals import MANAGERS_GROUP_NAME
+
+
+class ManagerTourSearchTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.manager = User.objects.create_user(username="tour-manager")
+        cls.manager.groups.add(Group.objects.get(name=MANAGERS_GROUP_NAME))
+        cls.egypt = Destination.objects.create(name="Египет", slug="egypt")
+        cls.turkey = Destination.objects.create(name="Турция", slug="turkey")
+        cls.published = Tour.objects.create(
+            title="Reef retreat", slug="reef-retreat", destination=cls.egypt,
+            resort="Шарм-эш-Шейх", hotel_name="Sea Garden", is_active=True,
+        )
+        cls.draft = Tour.objects.create(
+            title="Reef weekend", slug="reef-weekend", destination=cls.egypt,
+        )
+        cls.other_direction = Tour.objects.create(
+            title="Reef trip", slug="reef-trip", destination=cls.turkey, is_active=True,
+        )
+
+    def setUp(self):
+        self.client.force_login(self.manager)
+        self.url = reverse("manager:tour_list")
+
+    def test_search_by_title_resort_and_hotel(self):
+        for query in ("  RETREAT  ", "Шарм", "GARDEN"):
+            with self.subTest(query=query):
+                page = self.client.get(self.url, {"q": query})
+                self.assertEqual(list(page.context["page_obj"]), [self.published])
+
+    def test_direction_and_status_work_with_search(self):
+        for status, tour in (("published", self.published), ("draft", self.draft)):
+            with self.subTest(status=status):
+                response = self.client.get(self.url, {
+                    "q": "reef", "destination": "egypt", "status": status,
+                })
+                self.assertEqual(list(response.context["page_obj"]), [tour])
+                self.assertContains(response, 'value="egypt" selected')
+
+    def test_no_matches_offer_reset(self):
+        response = self.client.get(self.url, {"q": "no match"})
+        self.assertContains(response, "По этим условиям туров нет.")
+        self.assertContains(response, f'href="{self.url}">Сбросить</a>')
+
+    def test_status_and_pagination_links_preserve_filters(self):
+        Tour.objects.bulk_create([
+            Tour(title=f"Reef departure {index}", slug=f"reef-{index}",
+                 destination=self.egypt, is_active=True)
+            for index in range(20)
+        ])
+        filters = {"q": "reef", "destination": "egypt", "status": "published"}
+        response = self.client.get(self.url, filters)
+        self.assertEqual(response.context["page_obj"].paginator.count, 21)
+        self.assertContains(response, "?q=reef&amp;destination=egypt&amp;status=published&amp;page=2")
+
+        second_page = self.client.get(self.url, {**filters, "page": 2})
+        self.assertContains(second_page, 'href="/manager/?q=reef&amp;destination=egypt&amp;status=draft"')
 
 
 class ManagerTeamTests(TestCase):

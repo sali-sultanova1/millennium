@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -22,15 +23,33 @@ from .tour_photos import order_tour_photos, remove_tour_photo, save_tour_photos
 @permission_required("catalog.view_tour", raise_exception=True)
 def tour_list_view(request):
     tours = Tour.objects.select_related("destination").order_by("-updated_at", "-pk")
+    query = request.GET.get("q", "").strip()[:220]
+    destination = request.GET.get("destination", "")
     status = request.GET.get("status", "")
+
+    if query:
+        tours = tours.filter(
+            Q(title__icontains=query) | Q(resort__icontains=query) | Q(hotel_name__icontains=query)
+        )
+    if destination:
+        tours = tours.filter(destination__slug=destination)
 
     if status == "draft":
         tours = tours.filter(is_active=False)
     elif status == "published":
         tours = tours.filter(is_active=True, destination__is_active=True)
+    else:
+        status = ""
 
     page_obj = Paginator(tours, 20).get_page(request.GET.get("page"))
-    return render(request, "manager/tour_list.html", {"page_obj": page_obj, "status": status})
+    return render(request, "manager/tour_list.html", {
+        "page_obj": page_obj,
+        "query": query,
+        "destinations": Destination.objects.order_by("name"),
+        "selected_destination": destination,
+        "status": status,
+        "has_filters": bool(query or destination or status),
+    })
 
 @never_cache
 @login_required(login_url="manager:login")

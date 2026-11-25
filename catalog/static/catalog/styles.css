@@ -544,6 +544,12 @@ textarea { resize: vertical; }
 }
 
 .manager-filters { margin-bottom: 1rem; }
+.manager-tour-filters { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr) auto; align-items: end; gap: .75rem; margin-bottom: .75rem; }
+.manager-tour-filters .btn { min-height: 2.9rem; }
+@media (max-width: 42rem) {
+    .manager-tour-filters { grid-template-columns: 1fr; }
+}
+
 .manager-direction { grid-template-columns: minmax(0, 1fr) 7rem 15rem; }
 .manager-direction-title { display: flex; align-items: center; gap: .85rem; min-width: 0; }
 .manager-direction-title img { flex: none; width: 3.5rem; height: 3.5rem; object-fit: cover; border-radius: .55rem; }

@@ -16,10 +16,30 @@
         </div>
     </div>
 
-    <nav class="manager-actions manager-filters" aria-label="Фильтр туров">
-        <a class="btn {% if status == 'draft' or status == 'published' %}secondary{% else %}dark{% endif %}" href="{% url 'manager:tour_list' %}">Все</a>
-        <a class="btn {% if status == 'draft' %}dark{% else %}secondary{% endif %}" href="{% url 'manager:tour_list' %}?status=draft">Черновики</a>
-        <a class="btn {% if status == 'published' %}dark{% else %}secondary{% endif %}" href="{% url 'manager:tour_list' %}?status=published">Опубликованные</a>
+    {% url 'manager:tour_list' as tour_list_url %}
+    <form class="manager-tour-filters" role="search" method="get" action="{{ tour_list_url }}" aria-label="Поиск туров">
+        {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+        <div class="form-field">
+            <label for="manager-tour-query">Поиск</label>
+            <input type="search" id="manager-tour-query" name="q" value="{{ query }}" maxlength="220" placeholder="Название, курорт или отель">
+        </div>
+        <div class="form-field">
+            <label for="manager-tour-destination">Направление</label>
+            <select id="manager-tour-destination" name="destination">
+                <option value="">Все направления</option>
+                {% for destination in destinations %}<option value="{{ destination.slug }}"{% if destination.slug == selected_destination %} selected{% endif %}>{{ destination.name }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="manager-actions">
+            <button class="btn secondary" type="submit">Найти</button>
+            {% if has_filters %}<a class="text-action" href="{{ tour_list_url }}">Сбросить</a>{% endif %}
+        </div>
+    </form>
+
+    <nav class="manager-actions manager-filters" aria-label="Статус туров">
+        <a class="btn {% if status %}secondary{% else %}dark{% endif %}" href="{{ tour_list_url }}{% querystring status=None page=None %}"{% if not status %} aria-current="true"{% endif %}>Все</a>
+        <a class="btn {% if status == 'draft' %}dark{% else %}secondary{% endif %}" href="{{ tour_list_url }}{% querystring status='draft' page=None %}"{% if status == 'draft' %} aria-current="true"{% endif %}>Черновики</a>
+        <a class="btn {% if status == 'published' %}dark{% else %}secondary{% endif %}" href="{{ tour_list_url }}{% querystring status='published' page=None %}"{% if status == 'published' %} aria-current="true"{% endif %}>Опубликованные</a>
     </nav>
 
     <div class="manager-tours">
@@ -60,7 +80,7 @@
                 {% endif %}
             </article>
         {% empty %}
-            <div class="empty"><p>В каталоге пока нет туров.</p></div>
+            <div class="empty"><p>{% if has_filters %}По этим условиям туров нет.{% else %}В каталоге пока нет туров.{% endif %}</p></div>
         {% endfor %}
     </div>
 
