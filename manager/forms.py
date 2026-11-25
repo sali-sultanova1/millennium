@@ -1,5 +1,7 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 
+from accounts.models import User
 from catalog.models import Destination, Tour
 
 
@@ -43,3 +45,10 @@ class DestinationForm(forms.ModelForm):
         fields = ("name", "image", "is_active")
         labels = {"name": "Название направления", "is_active": "Показывать на сайте"}
         widgets = {"image": forms.FileInput}
+
+
+class EmployeeCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username", "first_name", "last_name")
+        labels = {"username": "Логин", "first_name": "Имя", "last_name": "Фамилия"}

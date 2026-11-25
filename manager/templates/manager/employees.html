@@ -1,0 +1,48 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Сотрудники — Миллениум{% endblock %}
+
+{% block content %}
+<div class="wrap page">
+    <header class="manager-heading"><h1>Сотрудники</h1></header>
+
+    <div class="manager-employee-layout">
+        <form class="inquiry-form" method="post">
+            <h2>Добавить сотрудника</h2>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+
+            {% include "inquiries/partials/field.html" with field=form.username only %}
+            <div class="field-grid">
+                {% include "inquiries/partials/field.html" with field=form.first_name only %}
+                {% include "inquiries/partials/field.html" with field=form.last_name only %}
+            </div>
+            {% include "inquiries/partials/field.html" with field=form.password1 only %}
+            {% include "inquiries/partials/field.html" with field=form.password2 only %}
+
+            <button class="btn primary" type="submit">Добавить сотрудника</button>
+        </form>
+
+        <section class="manager-employee-list" aria-labelledby="employee-list-title">
+            <h2 id="employee-list-title">Команда</h2>
+            {% if employees %}
+                <ul>
+                    {% for employee in employees %}
+                        <li class="surface manager-employee">
+                            <div>
+                                {% with full_name=employee.get_full_name %}
+                                    <strong>{{ full_name|default:employee.username }}</strong>
+                                    {% if full_name %}<small class="muted">{{ employee.username }}</small>{% endif %}
+                                {% endwith %}
+                            </div>
+                            <span class="manager-status {% if employee.is_active %}live{% endif %}">{{ employee.is_active|yesno:"Доступ открыт,Доступ закрыт" }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="muted">Здесь появятся добавленные сотрудники.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}
