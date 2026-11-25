@@ -1,6 +1,5 @@
 from django.contrib.auth.models import Group, Permission
 
-
 MANAGERS_GROUP_NAME = "Менеджеры"
 
 
