@@ -2,13 +2,21 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.http import Http404, HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
 from inquiries.models import Inquiry
+
+
+@never_cache
+@login_required(login_url="manager:login")
+@permission_required("inquiries.view_inquiry", raise_exception=True)
+@require_safe
+def inquiry_status_view(request):
+    return JsonResponse({"has_new": Inquiry.objects.filter(status=Inquiry.Status.NEW).exists()})
 
 
 @never_cache

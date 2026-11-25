@@ -1,7 +1,7 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
-from . import inquiry_views, views
+from . import employee_views, inquiry_views, views
 
 app_name = "manager"
 
@@ -19,7 +19,9 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(next_page="manager:login"), name="logout"),
     path("tours/<int:pk>/delete/", views.tour_delete_view, name="tour_delete"),
     path("inquiries/", inquiry_views.inquiry_list_view, name="inquiry_list"),
+    path("inquiries/status/", inquiry_views.inquiry_status_view, name="inquiry_status"),
     path("inquiries/<int:pk>/", inquiry_views.inquiry_detail_view, name="inquiry_detail"),
     path("inquiries/<int:pk>/work/", inquiry_views.inquiry_work_view, name="inquiry_work"),
     path("inquiries/<int:pk>/delete/", inquiry_views.inquiry_delete_view, name="inquiry_delete"),
+    path("employees/", employee_views.employees_view, name="employees"),
 ]

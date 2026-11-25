@@ -558,6 +558,18 @@ textarea { resize: vertical; }
 .manager-nav a, .manager-tabs a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: .45rem .75rem; border-radius: .5rem; color: var(--navy); font-weight: 650; text-decoration: none; }
 .manager-nav a:hover, .manager-tabs a:hover { background: var(--wash); }
 .manager-nav a[aria-current], .manager-tabs a[aria-current] { background: #e3eff7; }
+.manager-inquiry-dot { flex: none; width: .5rem; height: .5rem; margin-inline-start: .35rem; border-radius: 50%; background: var(--rose); }
+.manager-employee-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); align-items: start; gap: 1.5rem; }
+.manager-employee-layout h2 { font-size: 1.25rem; }
+.manager-employee-list { display: grid; gap: .8rem; }
+.manager-employee-list ul { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+.manager-employee { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .55rem; padding: .85rem 1rem; overflow-wrap: anywhere; }
+.manager-employee small { display: block; }
+
+@media (max-width: 48rem) {
+    .manager-employee-layout { grid-template-columns: 1fr; }
+}
+
 .manager-tabs { margin-bottom: 1rem; }
 .manager-inquiry { grid-template-columns: minmax(0, 1fr) 7rem 8rem minmax(0, 14rem); }
 .manager-inquiry > div { min-width: 0; overflow-wrap: anywhere; }

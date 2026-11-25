@@ -13,6 +13,7 @@ def csrf_failure(request, reason=""):
     if match and match.view_name in {
         "manager:destination_create",
         "manager:destination_edit",
+        "manager:employees",
         "manager:login",
         "manager:tour_create",
         "manager:tour_edit",
