@@ -60,7 +60,11 @@ class ManagerTeamTests(TestCase):
     def test_new_inquiry_badge_tracks_status(self):
         self.client.force_login(self.employee)
         url = reverse("manager:inquiry_status")
-        self.assertContains(self.client.get(reverse("manager:tour_list")), url)
+        dots_hidden = 'data-inquiry-dot aria-hidden="true" hidden'
+        dots_visible = 'data-inquiry-dot aria-hidden="true">'
+        tour_list = self.client.get(reverse("manager:tour_list"))
+        self.assertContains(tour_list, url)
+        self.assertContains(tour_list, dots_hidden)
         self.assertContains(self.client.get(reverse("manager:tour_create")), url)
         self.assertEqual(self.client.get(url).json(), {"has_new": False})
 
@@ -71,9 +75,13 @@ class ManagerTeamTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.json(), {"has_new": True})
         self.assertIn("no-store", response.headers["Cache-Control"])
+        for page in ("manager:tour_list", "manager:destination_list", "manager:inquiry_list"):
+            with self.subTest(page=page):
+                self.assertContains(self.client.get(reverse(page)), dots_visible)
 
         self.client.post(reverse("manager:inquiry_work", args=[inquiry.pk]), {"action": "claim"})
         self.assertEqual(self.client.get(url).json(), {"has_new": False})
+        self.assertContains(self.client.get(reverse("manager:inquiry_list")), dots_hidden)
 
     def test_new_inquiry_status_requires_inquiry_permission(self):
         url = reverse("manager:inquiry_status")

@@ -51,6 +51,10 @@ class Inquiry(models.Model):
         verbose_name = 'Заявка'
         verbose_name_plural = 'Заявки'
 
+    @classmethod
+    def has_new(cls):
+        return cls.objects.filter(status=cls.Status.NEW).exists()
+
     def __str__(self):
         return f"Заявка №{self.pk} — {self.name}"
 
