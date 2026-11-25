@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from django.db.models import Case, F, When
+from django.db.models import Case, F, Q, When
 from django.shortcuts import get_object_or_404, render
 
 from .forms import CatalogFilterForm
@@ -27,9 +27,11 @@ def search_options(tours):
 
 
 def tour_list_view(request):
-    tours = published_tours()
-    context = search_options(tours)
     filter_form = CatalogFilterForm(request.GET)
+    tours = published_tours().filter(
+        Q(departure_date__isnull=True) | Q(departure_date__gte=filter_form.today)
+    )
+    context = search_options(tours)
 
     destination = request.GET.get("destination", "")
     meal = request.GET.get("meal", "")

@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.db.models.deletion import ProtectedError
@@ -246,6 +247,8 @@ class CatalogViewsTests(TestCase):
 
 class CatalogFilterTests(TestCase):
     def setUp(self):
+        self.today = date(2026, 12, 9)
+        self.enterContext(patch("catalog.forms.timezone.localdate", return_value=self.today))
         self.destination1 = Destination.objects.create(name="Китай", slug="china", is_active=True)
         self.destination2 = Destination.objects.create(name="Турция", slug="turkey", is_active=True)
         self.tour1 = Tour.objects.create(destination=self.destination1, title="Первый", slug="test-tour1", meal="BB", departure_date=date(2026, 12, 10), is_active=True)
@@ -275,6 +278,24 @@ class CatalogFilterTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("departure_to", response.context["filter_form"].errors)
         self.assertContains(response, "data-has-errors")
+
+    def test_past_departures_are_unavailable_in_search(self):
+        Tour.objects.filter(pk=self.tour1.pk).update(departure_date=date(2026, 12, 8))
+        self.tour2.departure_date = self.today
+        self.tour2.save(update_fields=["departure_date"])
+        self.tour3.departure_date = None
+        self.tour3.save(update_fields=["departure_date"])
+        url = reverse("catalog:tour_list")
+
+        response = self.client.get(url)
+        self.assertCountEqual(response.context["tours"], [self.tour2, self.tour3])
+        self.assertContains(response, 'min="2026-12-09"', count=2)
+
+        for field in ("departure_from", "departure_to"):
+            with self.subTest(field=field):
+                response = self.client.get(url, {field: "2026-12-08"})
+                self.assertIn(field, response.context["filter_form"].errors)
+                self.assertFalse(response.context["tours"])
     
     def test_filter_by_destination(self):
         response = self.client.get(reverse("catalog:tour_list"), {"destination": "china"})
