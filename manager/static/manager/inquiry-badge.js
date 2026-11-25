@@ -27,7 +27,9 @@ if (inquiriesLink) {
         }
     }
 
-    updateInquiryBadge();
     window.setInterval(updateInquiryBadge, 20000);
     document.addEventListener("visibilitychange", updateInquiryBadge);
+    window.addEventListener("pageshow", event => {
+        if (event.persisted) updateInquiryBadge();
+    });
 }
