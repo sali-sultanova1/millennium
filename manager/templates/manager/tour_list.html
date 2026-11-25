@@ -1,6 +1,11 @@
 {% extends "manager/base.html" %}
+{% load static %}
 
 {% block title %}Туры — кабинет менеджера{% endblock %}
+
+{% block extra_head %}
+<script src="{% static 'manager/tour-search.js' %}" defer></script>
+{% endblock %}
 
 {% block content %}
 <section class="wrap page" aria-labelledby="manager-tours">
@@ -17,7 +22,7 @@
     </div>
 
     {% url 'manager:tour_list' as tour_list_url %}
-    <form class="manager-tour-filters" role="search" method="get" action="{{ tour_list_url }}" aria-label="Поиск туров">
+    <form class="manager-tour-filters" role="search" method="get" action="{{ tour_list_url }}" aria-label="Поиск туров" data-tour-search>
         {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
         <div class="form-field">
             <label for="manager-tour-query">Поиск</label>
@@ -32,68 +37,72 @@
         </div>
         <div class="manager-actions">
             <button class="btn secondary" type="submit">Найти</button>
-            {% if has_filters %}<a class="text-action" href="{{ tour_list_url }}">Сбросить</a>{% endif %}
+            <a class="text-action" href="{{ tour_list_url }}" data-tour-search-reset{% if not has_filters %} hidden{% endif %}>Сбросить</a>
         </div>
     </form>
+    <p class="alert" data-tour-search-error role="alert" hidden>Не удалось обновить список. Нажмите «Найти», чтобы повторить поиск.</p>
+    <p class="sr-only" data-tour-search-status role="status"></p>
 
-    <nav class="manager-actions manager-filters" aria-label="Статус туров">
-        <a class="btn {% if status %}secondary{% else %}dark{% endif %}" href="{{ tour_list_url }}{% querystring status=None page=None %}"{% if not status %} aria-current="true"{% endif %}>Все</a>
-        <a class="btn {% if status == 'draft' %}dark{% else %}secondary{% endif %}" href="{{ tour_list_url }}{% querystring status='draft' page=None %}"{% if status == 'draft' %} aria-current="true"{% endif %}>Черновики</a>
-        <a class="btn {% if status == 'published' %}dark{% else %}secondary{% endif %}" href="{{ tour_list_url }}{% querystring status='published' page=None %}"{% if status == 'published' %} aria-current="true"{% endif %}>Опубликованные</a>
-    </nav>
+    <div data-tour-search-results data-result-count="{{ page_obj.paginator.count }}">
+        <nav class="manager-actions manager-filters" aria-label="Статус туров">
+            <a class="btn {% if status %}secondary{% else %}dark{% endif %}" href="{{ tour_list_url }}{% querystring status=None page=None %}"{% if not status %} aria-current="true"{% endif %}>Все</a>
+            <a class="btn {% if status == 'draft' %}dark{% else %}secondary{% endif %}" href="{{ tour_list_url }}{% querystring status='draft' page=None %}"{% if status == 'draft' %} aria-current="true"{% endif %}>Черновики</a>
+            <a class="btn {% if status == 'published' %}dark{% else %}secondary{% endif %}" href="{{ tour_list_url }}{% querystring status='published' page=None %}"{% if status == 'published' %} aria-current="true"{% endif %}>Опубликованные</a>
+        </nav>
 
-    <div class="manager-tours">
-        {% for tour in page_obj %}
-            <article class="surface manager-tour">
-                <div>
-                    <h2>{% if tour.is_active and tour.destination.is_active %}<a href="{% url 'catalog:tour_detail' tour.slug %}">{{ tour.title }}</a>{% else %}{{ tour.title }}{% endif %}</h2>
-                    <small>{{ tour.destination.name }}</small>
-                </div>
-                <div>
-                    <small>Дата вылета</small>
-                    <div>{{ tour.departure_date|date:"d.m.Y"|default:"—" }}</div>
-                </div>
-                <div>
-                    {% if not tour.is_active %}
-                        <span class="manager-status draft">Черновик</span>
-                    {% elif tour.destination.is_active %}
-                        <span class="manager-status live">Опубликован</span>
-                    {% else %}
-                        <span class="manager-status">Направление скрыто</span>
-                    {% endif %}
-                </div>
-                {% if perms.catalog.change_tour %}
-                    <div class="manager-actions manager-tour-actions">
-                        <a class="btn secondary" href="{% url 'manager:tour_edit' tour.pk %}">Редактировать</a>
-                        <form method="post" action="{% url 'manager:tour_publication' tour.pk %}">
-                            {% csrf_token %}
-                            {% if tour.is_active %}
-                                <button class="btn secondary" type="submit" name="action" value="unpublish">Снять с публикации</button>
-                            {% else %}
-                                <button class="btn dark" type="submit" name="action" value="publish">Опубликовать</button>
-                            {% endif %}
-                        </form>
-                        {% if perms.catalog.delete_tour %}
-                            <a class="btn secondary manager-delete" href="{% url 'manager:tour_delete' tour.pk %}">Удалить</a>
+        <div class="manager-tours">
+            {% for tour in page_obj %}
+                <article class="surface manager-tour">
+                    <div>
+                        <h2>{% if tour.is_active and tour.destination.is_active %}<a href="{% url 'catalog:tour_detail' tour.slug %}">{{ tour.title }}</a>{% else %}{{ tour.title }}{% endif %}</h2>
+                        <small>{{ tour.destination.name }}</small>
+                    </div>
+                    <div>
+                        <small>Дата вылета</small>
+                        <div>{{ tour.departure_date|date:"d.m.Y"|default:"—" }}</div>
+                    </div>
+                    <div>
+                        {% if not tour.is_active %}
+                            <span class="manager-status draft">Черновик</span>
+                        {% elif tour.destination.is_active %}
+                            <span class="manager-status live">Опубликован</span>
+                        {% else %}
+                            <span class="manager-status">Направление скрыто</span>
                         {% endif %}
                     </div>
-                {% endif %}
-            </article>
-        {% empty %}
-            <div class="empty"><p>{% if has_filters %}По этим условиям туров нет.{% else %}В каталоге пока нет туров.{% endif %}</p></div>
-        {% endfor %}
-    </div>
+                    {% if perms.catalog.change_tour %}
+                        <div class="manager-actions manager-tour-actions">
+                            <a class="btn secondary" href="{% url 'manager:tour_edit' tour.pk %}">Редактировать</a>
+                            <form method="post" action="{% url 'manager:tour_publication' tour.pk %}">
+                                {% csrf_token %}
+                                {% if tour.is_active %}
+                                    <button class="btn secondary" type="submit" name="action" value="unpublish">Снять с публикации</button>
+                                {% else %}
+                                    <button class="btn dark" type="submit" name="action" value="publish">Опубликовать</button>
+                                {% endif %}
+                            </form>
+                            {% if perms.catalog.delete_tour %}
+                                <a class="btn secondary manager-delete" href="{% url 'manager:tour_delete' tour.pk %}">Удалить</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <div class="empty"><p>{% if has_filters %}По этим условиям туров нет.{% else %}В каталоге пока нет туров.{% endif %}</p></div>
+            {% endfor %}
+        </div>
 
-    {% if page_obj.has_other_pages %}
-        <nav class="pagination" aria-label="Страницы списка туров">
-            {% if page_obj.has_previous %}
-                <a class="btn secondary" href="{% querystring page=page_obj.previous_page_number %}">Назад</a>
-            {% endif %}
-            <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-            {% if page_obj.has_next %}
-                <a class="btn secondary" href="{% querystring page=page_obj.next_page_number %}">Далее</a>
-            {% endif %}
-        </nav>
-    {% endif %}
+        {% if page_obj.has_other_pages %}
+            <nav class="pagination" aria-label="Страницы списка туров">
+                {% if page_obj.has_previous %}
+                    <a class="btn secondary" href="{% querystring page=page_obj.previous_page_number %}">Назад</a>
+                {% endif %}
+                <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a class="btn secondary" href="{% querystring page=page_obj.next_page_number %}">Далее</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
 </section>
 {% endblock %}

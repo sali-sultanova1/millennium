@@ -50,7 +50,13 @@ class ManagerTourSearchTests(TestCase):
     def test_no_matches_offer_reset(self):
         response = self.client.get(self.url, {"q": "no match"})
         self.assertContains(response, "По этим условиям туров нет.")
-        self.assertContains(response, f'href="{self.url}">Сбросить</a>')
+        self.assertContains(response, f'href="{self.url}" data-tour-search-reset>Сбросить</a>')
+
+    def test_search_markup_exposes_initial_result_count(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'data-tour-search-reset hidden')
+        self.assertContains(response, 'data-tour-search-results data-result-count="3"')
+        self.assertContains(response, "/static/manager/tour-search.js")
 
     def test_status_and_pagination_links_preserve_filters(self):
         Tour.objects.bulk_create([

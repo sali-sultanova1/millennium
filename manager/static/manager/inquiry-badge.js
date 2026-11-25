@@ -21,7 +21,7 @@ if (inquiriesLink) {
             const message = hasNew ? "Есть новые заявки" : "";
             if (announcement.textContent !== message) announcement.textContent = message;
         } catch {
-            // Preserve the last badge state until the next successful check.
+            return;
         } finally {
             checking = false;
         }
