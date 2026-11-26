@@ -103,13 +103,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
 
-INQUIRY_NOTIFICATION_EMAILS = [
-    address.strip()
-    for address in env.list("INQUIRY_NOTIFICATION_EMAILS", default=[])
-    if address.strip()
-]
+INQUIRY_NOTIFICATIONS_ENABLED = env.bool("INQUIRY_NOTIFICATIONS_ENABLED", default=False)
 INQUIRY_NOTIFICATION_BASE_URL = env("INQUIRY_NOTIFICATION_BASE_URL", default="").strip().rstrip("/")
-if INQUIRY_NOTIFICATION_EMAILS:
+if INQUIRY_NOTIFICATIONS_ENABLED:
     notification_url = urlsplit(INQUIRY_NOTIFICATION_BASE_URL)
     if notification_url.scheme not in {"http", "https"} or not notification_url.hostname:
         raise ImproperlyConfigured("Set INQUIRY_NOTIFICATION_BASE_URL to the public site URL.")

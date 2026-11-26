@@ -15,7 +15,7 @@
         {% endif %}
 
         <div class="form-field">
-            <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+            {{ form.username.label_tag }}
             {{ form.username }}
             {{ form.username.errors }}
         </div>

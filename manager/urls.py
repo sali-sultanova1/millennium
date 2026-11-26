@@ -2,6 +2,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
 
 from . import employee_views, inquiry_views, views
+from .forms import ManagerLoginForm
 
 app_name = "manager"
 
@@ -15,7 +16,7 @@ urlpatterns = [
     path("directions/new/", views.destination_form_view, name="destination_create"),
     path("directions/<int:pk>/edit/", views.destination_form_view, name="destination_edit"),
     path("directions/<int:pk>/delete/", views.destination_delete_view, name="destination_delete"),
-    path("login/", LoginView.as_view(template_name="manager/login.html", next_page="manager:tour_list"), name="login"),
+    path("login/", LoginView.as_view(template_name="manager/login.html", authentication_form=ManagerLoginForm, next_page="manager:tour_list"), name="login"),
     path("logout/", LogoutView.as_view(next_page="manager:login"), name="logout"),
     path("tours/<int:pk>/delete/", views.tour_delete_view, name="tour_delete"),
     path("inquiries/", inquiry_views.inquiry_list_view, name="inquiry_list"),
@@ -24,4 +25,5 @@ urlpatterns = [
     path("inquiries/<int:pk>/work/", inquiry_views.inquiry_work_view, name="inquiry_work"),
     path("inquiries/<int:pk>/delete/", inquiry_views.inquiry_delete_view, name="inquiry_delete"),
     path("employees/", employee_views.employees_view, name="employees"),
+    path("employees/<int:pk>/email/", employee_views.employee_email_view, name="employee_email"),
 ]

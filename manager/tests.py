@@ -87,6 +87,7 @@ class ManagerTeamTests(TestCase):
         password = "A-unique-test-password-47"
         data = {
             "username": "new-manager",
+            "email": "amina@example.test",
             "first_name": "Амина",
             "password1": password,
             "password2": password,
@@ -97,13 +98,73 @@ class ManagerTeamTests(TestCase):
         self.assertRedirects(self.client.post(url, data), url)
         employee = User.objects.get(username="new-manager")
         self.assertTrue(employee.check_password(password))
+        self.assertEqual(employee.email, data["email"])
         self.assertTrue(employee.is_active)
         self.assertTrue(employee.has_perm("inquiries.view_inquiry"))
         self.assertFalse(employee.is_staff)
         self.assertFalse(employee.is_superuser)
         self.assertContains(self.client.get(url), "Амина")
+        self.assertContains(self.client.get(url), data["email"])
         self.assertContains(self.client.post(url, data), 'id="id_username_error"')
         self.assertEqual(User.objects.filter(username="new-manager").count(), 1)
+
+    def test_owner_must_supply_a_unique_employee_email(self):
+        self.client.force_login(self.owner)
+        self.owner.email = "owner@example.test"
+        self.owner.save(update_fields=["email"])
+        url = reverse("manager:employees")
+        password = "A-unique-test-password-47"
+        data = {"username": "new-manager", "password1": password, "password2": password}
+
+        for email in ("", "OWNER@example.test", "invalid"):
+            with self.subTest(email=email):
+                response = self.client.post(url, {**data, "email": email})
+                self.assertContains(response, 'id="id_email_error"')
+        self.assertFalse(User.objects.filter(username="new-manager").exists())
+
+    def test_owner_adds_email_to_existing_employee_and_both_logins_work(self):
+        password = "A-unique-test-password-47"
+        self.employee.set_password(password)
+        self.employee.save(update_fields=["password"])
+        login_url = reverse("manager:login")
+        tour_list = reverse("manager:tour_list")
+
+        legacy_client = Client()
+        self.assertRedirects(legacy_client.post(login_url, {"username": self.employee.username, "password": password}), tour_list)
+
+        self.client.force_login(self.owner)
+        url = reverse("manager:employee_email", args=[self.employee.pk])
+        self.assertContains(self.client.get(reverse("manager:employees")), url)
+        self.assertRedirects(self.client.post(url, {"email": "employee@example.test"}), reverse("manager:employees"))
+        self.employee.refresh_from_db()
+        self.assertEqual(self.employee.email, "employee@example.test")
+
+        for identifier in (self.employee.username, "EMPLOYEE@EXAMPLE.TEST"):
+            with self.subTest(identifier=identifier):
+                client = Client()
+                self.assertRedirects(client.post(login_url, {"username": identifier, "password": password}), tour_list)
+                self.assertEqual(client.session["_auth_user_id"], str(self.employee.pk))
+
+        self.employee.is_active = False
+        self.employee.save(update_fields=["is_active"])
+        client = Client()
+        response = client.post(login_url, {"username": self.employee.email, "password": password})
+        self.assertContains(response, "Проверьте логин или почту и пароль.", status_code=200)
+        self.assertNotIn("_auth_user_id", client.session)
+
+    def test_employee_cannot_edit_employee_email(self):
+        self.client.force_login(self.employee)
+        url = reverse("manager:employee_email", args=[self.employee.pk])
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertEqual(self.client.post(url, {"email": "employee@example.test"}).status_code, 403)
+
+    def test_owner_can_set_own_email_from_employee_page(self):
+        self.client.force_login(self.owner)
+        url = reverse("manager:employee_email", args=[self.owner.pk])
+        self.assertContains(self.client.get(reverse("manager:employees")), url)
+        self.assertRedirects(self.client.post(url, {"email": "owner@example.test"}), reverse("manager:employees"))
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.email, "owner@example.test")
 
     def test_non_owner_cannot_list_or_create_employees(self):
         url = reverse("manager:employees")

@@ -2,18 +2,31 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.db import transaction
+from django.db.models import Q
 from django.urls import reverse
+
+from accounts.models import User
+from manager.signals import MANAGERS_GROUP_NAME
 
 from .models import Inquiry, InquiryTour
 
 
 def send_inquiry_notification(inquiry_id):
+    recipients = list(
+        User.objects.filter(Q(groups__name=MANAGERS_GROUP_NAME) | Q(is_superuser=True), is_active=True)
+        .exclude(email="")
+        .values_list("email", flat=True)
+        .distinct()
+    )
+    if not recipients:
+        return
+
     path = reverse("manager:inquiry_detail", args=[inquiry_id])
     url = f"{settings.INQUIRY_NOTIFICATION_BASE_URL}{path}"
     EmailMessage(
         subject=f"Миллениум — новая заявка №{inquiry_id}",
         body=f"На сайте оставили новую заявку.\n\nОткрыть в кабинете менеджера\n{url}",
-        bcc=settings.INQUIRY_NOTIFICATION_EMAILS,
+        bcc=recipients,
     ).send()
 
 
@@ -72,7 +85,7 @@ def create_inquiry(form, source, tours):
                 price_from_snapshot=tour.price_from,
             )
 
-        if settings.INQUIRY_NOTIFICATION_EMAILS:
+        if settings.INQUIRY_NOTIFICATIONS_ENABLED:
             transaction.on_commit(lambda: send_inquiry_notification(inquiry.pk), robust=True)
 
     return inquiry
