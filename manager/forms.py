@@ -102,14 +102,11 @@ class EmployeeEmailForm(forms.ModelForm):
 
 
 class EmployeeDetailsForm(EmployeeEmailForm):
-    phone = forms.CharField(
-        label="Телефон", max_length=30, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}),
-    )
-
     class Meta(EmployeeEmailForm.Meta):
         fields = ("username", "email", "phone", "first_name", "last_name")
         labels = {"username": "Логин", "first_name": "Имя", "last_name": "Фамилия"}
         field_classes = {"username": UsernameField}
+        widgets = {"phone": forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"})}
 
     def clean_username(self):
         return clean_employee_username(self.cleaned_data["username"], self.instance.pk)
@@ -117,14 +114,12 @@ class EmployeeDetailsForm(EmployeeEmailForm):
 
 class EmployeeCreationForm(UserCreationForm):
     email = forms.EmailField(label="Электронная почта", max_length=254)
-    phone = forms.CharField(
-        label="Телефон", max_length=30, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}),
-    )
 
     class Meta(UserCreationForm.Meta):
         model = User
         fields = EmployeeDetailsForm.Meta.fields
         labels = EmployeeDetailsForm.Meta.labels
+        widgets = EmployeeDetailsForm.Meta.widgets
 
     def clean_username(self):
         return clean_employee_username(self.cleaned_data["username"])
