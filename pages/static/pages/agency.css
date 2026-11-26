@@ -41,3 +41,23 @@
 .agency-card-link {
     margin-top: auto;
 }
+
+.agency-address {
+    color: var(--copy);
+    font-style: normal;
+}
+
+.agency-contact-links,
+.agency-hours {
+    display: grid;
+    gap: .55rem;
+}
+
+.agency-hours div {
+    display: grid;
+    grid-template-columns: 4rem auto;
+}
+
+.agency-hours dt {
+    font-weight: 650;
+}

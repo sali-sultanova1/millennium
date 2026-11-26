@@ -7,6 +7,7 @@ from catalog.models import Destination, Tour
 class AgencyPagesTests(TestCase):
     def test_agency_pages_open(self):
         for name, title in (
+            ("contacts", "Контакты"),
             ("about", "О компании"),
             ("services", "Услуги"),
             ("directions", "Направления"),
@@ -14,6 +15,24 @@ class AgencyPagesTests(TestCase):
             with self.subTest(page=name):
                 response = self.client.get(reverse(f"pages:{name}"))
                 self.assertContains(response, f"<h1>{title}</h1>", html=True)
+
+    def test_office_and_manager_contacts(self):
+        contacts = self.client.get(reverse("pages:contacts"))
+        for text in (
+            "Ставрополь, ул. 50 лет ВЛКСМ, 28А",
+            "ТЦ «Милан», 3-й этаж, офис 1",
+            "10:00–17:00",
+            "11:00–16:00",
+            "Галимат Султанова",
+            'href="tel:+79993799515"',
+            'href="https://wa.me/79633861818"',
+            'href="https://t.me/galima_sultanova"',
+        ):
+            self.assertContains(contacts, text)
+
+        for page in (contacts, self.client.get(reverse("home"))):
+            self.assertContains(page, 'href="tel:+79633861818"')
+            self.assertContains(page, 'href="mailto:gvoyage26@mail.ru"')
 
     def test_navigation_links_to_agency_pages(self):
         response = self.client.get(reverse("home"))

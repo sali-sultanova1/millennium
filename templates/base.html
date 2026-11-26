@@ -64,6 +64,7 @@
                 <a href="{% url 'pages:about' %}">О компании</a>
                 <a href="{% url 'pages:services' %}">Услуги</a>
                 <a href="{% url 'pages:contacts' %}">Контакты</a>
+                {% include "pages/partials/office_links.html" only %}
                 <a href="{% url 'inquiries:create' %}">Подобрать мне тур</a>
                 <a href="{% url 'catalog:favorites' %}">Обсудить избранное</a>
             </nav>
