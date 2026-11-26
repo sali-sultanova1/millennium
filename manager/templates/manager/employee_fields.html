@@ -1,0 +1,7 @@
+{% include "inquiries/partials/field.html" with field=form.username only %}
+{% include "inquiries/partials/field.html" with field=form.email only %}
+{% include "inquiries/partials/field.html" with field=form.phone only %}
+<div class="field-grid">
+    {% include "inquiries/partials/field.html" with field=form.first_name only %}
+    {% include "inquiries/partials/field.html" with field=form.last_name only %}
+</div>

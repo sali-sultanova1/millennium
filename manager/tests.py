@@ -88,6 +88,7 @@ class ManagerTeamTests(TestCase):
         data = {
             "username": "new-manager",
             "email": "amina@example.test",
+            "phone": "+7 (900) 123-45-67",
             "first_name": "Амина",
             "password1": password,
             "password2": password,
@@ -99,6 +100,7 @@ class ManagerTeamTests(TestCase):
         employee = User.objects.get(username="new-manager")
         self.assertTrue(employee.check_password(password))
         self.assertEqual(employee.email, data["email"])
+        self.assertEqual(employee.phone, data["phone"])
         self.assertTrue(employee.is_active)
         self.assertTrue(employee.has_perm("inquiries.view_inquiry"))
         self.assertFalse(employee.is_staff)
@@ -114,12 +116,23 @@ class ManagerTeamTests(TestCase):
         self.owner.save(update_fields=["email"])
         url = reverse("manager:employees")
         password = "A-unique-test-password-47"
-        data = {"username": "new-manager", "password1": password, "password2": password}
+        data = {"username": "new-manager", "phone": "+79001234567", "password1": password, "password2": password}
 
         for email in ("", "OWNER@example.test", "invalid"):
             with self.subTest(email=email):
                 response = self.client.post(url, {**data, "email": email})
                 self.assertContains(response, 'id="id_email_error"')
+        self.assertFalse(User.objects.filter(username="new-manager").exists())
+
+    def test_employee_phone_is_required_and_validated_on_creation(self):
+        self.client.force_login(self.owner)
+        url = reverse("manager:employees")
+        password = "A-unique-test-password-47"
+        data = {"username": "new-manager", "email": "new@example.test", "password1": password, "password2": password}
+        for phone in ("", "12345", "invalid"):
+            with self.subTest(phone=phone):
+                self.assertContains(self.client.post(url, {**data, "phone": phone}), 'id="id_phone_error"')
+
         self.assertFalse(User.objects.filter(username="new-manager").exists())
 
     def test_owner_adds_email_to_existing_employee_and_both_logins_work(self):
@@ -134,7 +147,7 @@ class ManagerTeamTests(TestCase):
 
         self.client.force_login(self.owner)
         url = reverse("manager:employee_email", args=[self.employee.pk])
-        self.assertContains(self.client.get(reverse("manager:employees")), url)
+        self.assertContains(self.client.get(reverse("manager:employees")), reverse("manager:employee_edit", args=[self.employee.pk]))
         self.assertRedirects(self.client.post(url, {"email": "employee@example.test"}), reverse("manager:employees"))
         self.employee.refresh_from_db()
         self.assertEqual(self.employee.email, "employee@example.test")
@@ -165,6 +178,72 @@ class ManagerTeamTests(TestCase):
         self.assertRedirects(self.client.post(url, {"email": "owner@example.test"}), reverse("manager:employees"))
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.email, "owner@example.test")
+
+    def test_owner_can_edit_employee_details(self):
+        self.client.force_login(self.owner)
+        url = reverse("manager:employee_edit", args=[self.employee.pk])
+        data = {
+            "username": "renewed-login",
+            "email": "new@example.test",
+            "phone": "+7 (900) 123-45-67",
+            "first_name": "Амина",
+            "last_name": "Саидова",
+            "is_active": "",
+            "is_superuser": "on",
+        }
+        self.assertContains(self.client.post(url, {**data, "phone": ""}), 'id="id_phone_error"')
+        self.assertRedirects(self.client.post(url, data), reverse("manager:employees"))
+        self.employee.refresh_from_db()
+        for field in ("username", "email", "phone", "first_name", "last_name"):
+            self.assertEqual(getattr(self.employee, field), data[field])
+        self.assertTrue(self.employee.is_active)
+        self.assertFalse(self.employee.is_superuser)
+        self.assertTrue(self.employee.groups.filter(pk=self.group.pk).exists())
+
+    def test_disabling_employee_revokes_sessions_and_reenabling_allows_new_login(self):
+        password = "A-unique-test-password-47"
+        self.employee.set_password(password)
+        self.employee.save(update_fields=["password"])
+        already_open = Client()
+        already_open.force_login(self.employee)
+        idle = Client()
+        idle.force_login(self.employee)
+
+        self.client.force_login(self.owner)
+        access_url = reverse("manager:employee_access", args=[self.employee.pk])
+        edit_url = reverse("manager:employee_edit", args=[self.employee.pk])
+        tour_list = reverse("manager:tour_list")
+        login_url = reverse("manager:login")
+        credentials = {"username": self.employee.username, "password": password}
+        self.assertEqual(self.client.get(access_url).status_code, 405)
+        self.assertRedirects(self.client.post(access_url, {"action": "disable"}), edit_url)
+        self.assertContains(self.client.get(edit_url), "Включить доступ")
+        self.assertRedirects(already_open.get(tour_list), f"{login_url}?next={tour_list}")
+        self.assertContains(Client().post(login_url, credentials), "Проверьте логин или почту и пароль.")
+
+        self.assertRedirects(self.client.post(access_url, {"action": "enable"}), edit_url)
+        self.assertRedirects(idle.get(tour_list), f"{login_url}?next={tour_list}")
+        self.assertRedirects(idle.post(login_url, credentials), tour_list)
+
+    def test_access_control_requires_owner_and_rejects_owner_account(self):
+        edit_url = reverse("manager:employee_edit", args=[self.employee.pk])
+        access_url = reverse("manager:employee_access", args=[self.employee.pk])
+        self.client.force_login(self.employee)
+        self.assertEqual(self.client.get(edit_url).status_code, 403)
+        self.assertEqual(self.client.post(access_url, {"action": "disable"}).status_code, 403)
+        self.client.force_login(self.owner)
+        owner_url = reverse("manager:employee_access", args=[self.owner.pk])
+        self.assertEqual(self.client.post(owner_url, {"action": "disable"}).status_code, 404)
+        self.owner.refresh_from_db()
+        self.assertTrue(self.owner.is_active)
+
+    def test_access_change_requires_csrf_token(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.owner)
+        access_url = reverse("manager:employee_access", args=[self.employee.pk])
+        self.assertEqual(client.post(access_url, {"action": "disable"}).status_code, 403)
+        self.employee.refresh_from_db()
+        self.assertTrue(self.employee.is_active)
 
     def test_non_owner_cannot_list_or_create_employees(self):
         url = reverse("manager:employees")
