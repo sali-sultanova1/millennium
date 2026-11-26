@@ -171,13 +171,44 @@ class ManagerTeamTests(TestCase):
         self.assertEqual(self.client.get(url).status_code, 403)
         self.assertEqual(self.client.post(url, {"email": "employee@example.test"}).status_code, 403)
 
-    def test_owner_can_set_own_email_from_employee_page(self):
+    def test_legacy_owner_email_form_still_saves_email(self):
         self.client.force_login(self.owner)
         url = reverse("manager:employee_email", args=[self.owner.pk])
-        self.assertContains(self.client.get(reverse("manager:employees")), url)
+        self.assertContains(self.client.get(url), "Моя почта")
         self.assertRedirects(self.client.post(url, {"email": "owner@example.test"}), reverse("manager:employees"))
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.email, "owner@example.test")
+
+    def test_owner_can_edit_own_profile(self):
+        self.client.force_login(self.owner)
+        url = reverse("manager:employee_edit", args=[self.owner.pk])
+        employees_url = reverse("manager:employees")
+        self.assertContains(self.client.get(employees_url), f'href="{url}">Мой профиль</a>')
+        response = self.client.get(url)
+        self.assertContains(response, "<h1>Мой профиль</h1>")
+        self.assertNotContains(response, reverse("manager:employee_access", args=[self.owner.pk]))
+        data = {
+            "username": "new-owner-login",
+            "email": "manager-owner@example.test",
+            "phone": "+7 (900) 123-45-67",
+            "first_name": "Амина",
+            "last_name": "Саидова",
+        }
+        self.assertRedirects(self.client.post(url, data), employees_url)
+        self.owner.refresh_from_db()
+        for field, value in data.items():
+            self.assertEqual(getattr(self.owner, field), value)
+        self.assertTrue(self.owner.is_superuser)
+        self.assertTrue(self.owner.is_active)
+        self.assertEqual(self.client.session["_auth_user_id"], str(self.owner.pk))
+
+    def test_owner_cannot_edit_another_owner_profile(self):
+        other = User.objects.create_superuser(username="another-owner")
+        other.groups.add(self.group)
+        self.client.force_login(self.owner)
+        url = reverse("manager:employee_edit", args=[other.pk])
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(self.client.post(url, {"username": "attempted-edit"}).status_code, 404)
 
     def test_owner_can_edit_employee_details(self):
         self.client.force_login(self.owner)
