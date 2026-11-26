@@ -1,6 +1,8 @@
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
@@ -111,6 +113,28 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "accounts.User"
+
+INQUIRY_NOTIFICATION_EMAILS = [
+    address.strip()
+    for address in env.list("INQUIRY_NOTIFICATION_EMAILS", default=[])
+    if address.strip()
+]
+INQUIRY_NOTIFICATION_BASE_URL = env("INQUIRY_NOTIFICATION_BASE_URL", default="").strip().rstrip("/")
+if INQUIRY_NOTIFICATION_EMAILS:
+    notification_url = urlsplit(INQUIRY_NOTIFICATION_BASE_URL)
+    if notification_url.scheme not in {"http", "https"} or not notification_url.hostname:
+        raise ImproperlyConfigured("Set INQUIRY_NOTIFICATION_BASE_URL to the public site URL.")
+
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=not EMAIL_USE_SSL)
+EMAIL_TIMEOUT = 5
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="") or EMAIL_HOST_USER or "webmaster@localhost"
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 

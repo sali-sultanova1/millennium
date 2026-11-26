@@ -52,8 +52,9 @@ class Inquiry(models.Model):
         verbose_name_plural = 'Заявки'
 
     @classmethod
-    def has_new(cls):
-        return cls.objects.filter(status=cls.Status.NEW).exists()
+    def new_ids(cls):
+        ids = cls.objects.filter(status=cls.Status.NEW).order_by("pk").values_list("pk", flat=True)
+        return [str(inquiry_id) for inquiry_id in ids]
 
     def __str__(self):
         return f"Заявка №{self.pk} — {self.name}"

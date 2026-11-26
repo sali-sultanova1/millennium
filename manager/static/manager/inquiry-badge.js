@@ -2,11 +2,25 @@ const inquiriesLink = document.querySelector("[data-inquiry-status-url]");
 
 if (inquiriesLink) {
     const dot = inquiriesLink.querySelector("[data-inquiry-dot]");
-    const announcement = inquiriesLink.querySelector("[data-inquiry-announcement]");
+    const count = inquiriesLink.querySelector("[data-inquiry-count]");
+    const announcement = document.querySelector("[data-inquiry-announcement]");
+    const notice = document.querySelector("[data-inquiry-notice]");
+    const noticeText = notice.querySelector("[data-inquiry-notice-text]");
+    const originalTitle = document.title;
+    let previousIds = new Set(JSON.parse(document.getElementById("new-inquiry-ids").textContent));
+    let noticeIds = [];
     let checking = false;
 
+    function updateIndicator(ids) {
+        const hasNew = ids.size > 0;
+        dot.hidden = !hasNew;
+        document.title = hasNew ? `● ${originalTitle}` : originalTitle;
+        const message = hasNew ? `Новые заявки (${ids.size})` : "";
+        if (count.textContent !== message) count.textContent = message;
+    }
+
     async function updateInquiryBadge() {
-        if (document.hidden || checking) return;
+        if (checking) return;
         checking = true;
 
         try {
@@ -16,10 +30,22 @@ if (inquiriesLink) {
             });
             if (!response.ok) return;
 
-            const { has_new: hasNew } = await response.json();
-            dot.hidden = !hasNew;
-            const message = hasNew ? "Есть новые заявки" : "";
-            if (announcement.textContent !== message) announcement.textContent = message;
+            const { new_ids: ids } = await response.json();
+            if (!Array.isArray(ids)) return;
+            const currentIds = new Set(ids);
+            const arrivals = ids.filter(id => !previousIds.has(id));
+            noticeIds = [...noticeIds.filter(id => currentIds.has(id)), ...arrivals];
+            previousIds = currentIds;
+
+            updateIndicator(currentIds);
+            noticeText.textContent = noticeIds.length === 1 ? "Новая заявка" : "Поступили новые заявки";
+            notice.hidden = noticeIds.length === 0;
+            if (arrivals.length) {
+                const latestId = arrivals[arrivals.length - 1];
+                announcement.textContent = arrivals.length === 1
+                    ? `Поступила новая заявка №${latestId}`
+                    : `Поступили новые заявки. Последняя — №${latestId}`;
+            }
         } catch {
             return;
         } finally {
@@ -27,8 +53,16 @@ if (inquiriesLink) {
         }
     }
 
+    notice.querySelector("[data-inquiry-dismiss]").addEventListener("click", () => {
+        noticeIds = [];
+        notice.hidden = true;
+        inquiriesLink.focus();
+    });
+    updateIndicator(previousIds);
     window.setInterval(updateInquiryBadge, 20000);
-    document.addEventListener("visibilitychange", updateInquiryBadge);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) updateInquiryBadge();
+    });
     window.addEventListener("pageshow", event => {
         if (event.persisted) updateInquiryBadge();
     });

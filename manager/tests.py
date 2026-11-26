@@ -130,21 +130,30 @@ class ManagerTeamTests(TestCase):
         self.assertContains(tour_list, url)
         self.assertContains(tour_list, dots_hidden)
         self.assertContains(self.client.get(reverse("manager:tour_create")), url)
-        self.assertEqual(self.client.get(url).json(), {"has_new": False})
+        self.assertEqual(self.client.get(url).json(), {"has_new": False, "new_ids": []})
 
         inquiry = Inquiry.objects.create(
             name="Клиент", phone="0000000000", contact_method=Inquiry.ContactMethod.ANY,
             adults=1, children=0, source=Inquiry.Source.SELECTION,
         )
         response = self.client.get(url)
-        self.assertEqual(response.json(), {"has_new": True})
+        self.assertEqual(response.json(), {"has_new": True, "new_ids": [str(inquiry.pk)]})
         self.assertIn("no-store", response.headers["Cache-Control"])
         for page in ("manager:tour_list", "manager:destination_list", "manager:inquiry_list"):
             with self.subTest(page=page):
                 self.assertContains(self.client.get(reverse(page)), dots_visible)
 
+        second = Inquiry.objects.create(
+            name="Другой клиент", phone="0000000000", contact_method=Inquiry.ContactMethod.ANY,
+            adults=1, children=0, source=Inquiry.Source.SELECTION,
+        )
+        self.assertEqual(self.client.get(url).json(), {"has_new": True, "new_ids": [str(inquiry.pk), str(second.pk)]})
+
         self.client.post(reverse("manager:inquiry_work", args=[inquiry.pk]), {"action": "claim"})
-        self.assertEqual(self.client.get(url).json(), {"has_new": False})
+        self.assertEqual(self.client.get(url).json(), {"has_new": True, "new_ids": [str(second.pk)]})
+
+        self.client.post(reverse("manager:inquiry_work", args=[second.pk]), {"action": "claim"})
+        self.assertEqual(self.client.get(url).json(), {"has_new": False, "new_ids": []})
         self.assertContains(self.client.get(reverse("manager:inquiry_list")), dots_hidden)
 
     def test_new_inquiry_status_requires_inquiry_permission(self):

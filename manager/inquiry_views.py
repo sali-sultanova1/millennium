@@ -20,7 +20,8 @@ from inquiries.models import Inquiry
 @permission_required("inquiries.view_inquiry", raise_exception=True)
 @require_safe
 def inquiry_status_view(request):
-    return JsonResponse({"has_new": Inquiry.has_new()})
+    new_ids = Inquiry.new_ids()
+    return JsonResponse({"has_new": bool(new_ids), "new_ids": new_ids})
 
 
 @never_cache

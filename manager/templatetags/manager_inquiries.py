@@ -6,5 +6,5 @@ register = template.Library()
 
 
 @register.simple_tag
-def has_new_inquiries():
-    return Inquiry.has_new()
+def new_inquiry_ids():
+    return Inquiry.new_ids()
