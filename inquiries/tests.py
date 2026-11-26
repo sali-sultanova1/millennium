@@ -3,12 +3,15 @@ from decimal import Decimal
 from smtplib import SMTPException
 from unittest.mock import patch
 
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from accounts.models import User
 from catalog.models import Destination, Tour
+from manager.signals import MANAGERS_GROUP_NAME
 
 from .forms import InquiryForm
 from .models import Inquiry, InquiryTour
@@ -330,7 +333,7 @@ class InquiryServiceTests(TestCase):
         self.assertEqual(item.title_snapshot, "Отдых в Китае")
         self.assertEqual(item.price_snapshot, Decimal("260000.00"))
 
-    @override_settings(INQUIRY_NOTIFICATION_EMAILS=["team@example.test"])
+    @override_settings(INQUIRY_NOTIFICATIONS_ENABLED=True)
     def test_snapshot_failure_rolls_back_inquiry(self):
         form = InquiryForm(data=self.data)
         self.assertTrue(form.is_valid(), form.errors)
@@ -376,11 +379,20 @@ class InquiryViewTests(TestCase):
         self.assertEqual(inquiry.selected_tours.count(), 0)
 
     @override_settings(
-        INQUIRY_NOTIFICATION_EMAILS=["team@example.test", "manager@example.test"],
+        INQUIRY_NOTIFICATIONS_ENABLED=True,
         INQUIRY_NOTIFICATION_BASE_URL="https://agency.example.test",
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     )
     def test_valid_post_sends_notification_after_commit(self):
+        group = Group.objects.get(name=MANAGERS_GROUP_NAME)
+        group.user_set.add(
+            User.objects.create_user(username="employee", email="employee@example.test"),
+            User.objects.create_user(username="inactive", email="inactive@example.test", is_active=False),
+            User.objects.create_user(username="legacy"),
+        )
+        User.objects.create_superuser(username="owner", email="owner@example.test")
+        User.objects.create_user(username="customer", email="customer@example.test")
+
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(self.url, self.data)
             self.assertEqual(mail.outbox, [])
@@ -394,13 +406,23 @@ class InquiryViewTests(TestCase):
         self.assertIn(f"https://agency.example.test{path}", message.body)
         self.assertNotIn(inquiry.name, message.body)
         self.assertNotIn(inquiry.phone, message.body)
-        self.assertEqual(message.bcc, ["team@example.test", "manager@example.test"])
+        self.assertCountEqual(message.bcc, ["employee@example.test", "owner@example.test"])
+
+    @override_settings(INQUIRY_NOTIFICATIONS_ENABLED=False)
+    def test_disabled_notifications_do_not_register_an_email(self):
+        User.objects.create_superuser(username="owner", email="owner@example.test")
+        with self.captureOnCommitCallbacks() as callbacks:
+            response = self.client.post(self.url, self.data)
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+        self.assertEqual(callbacks, [])
 
     @override_settings(
-        INQUIRY_NOTIFICATION_EMAILS=["team@example.test"],
+        INQUIRY_NOTIFICATIONS_ENABLED=True,
         INQUIRY_NOTIFICATION_BASE_URL="https://agency.example.test",
     )
     def test_email_failure_preserves_submitted_inquiry(self):
+        User.objects.create_superuser(username="owner", email="owner@example.test")
         with (
             self.assertLogs("django.test", level="ERROR"),
             patch("inquiries.services.EmailMessage.send", side_effect=SMTPException("SMTP unavailable")),

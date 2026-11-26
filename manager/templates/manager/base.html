@@ -30,7 +30,7 @@
                             </a>
                             {{ inquiry_ids|json_script:"new-inquiry-ids" }}
                         {% endif %}
-                        {% if user.is_superuser %}<a href="{% url 'manager:employees' %}"{% if current == 'employees' %} aria-current="true"{% endif %}>Сотрудники</a>{% endif %}
+                        {% if user.is_superuser %}<a href="{% url 'manager:employees' %}"{% if current == 'employees' or current == 'employee_email' %} aria-current="true"{% endif %}>Сотрудники</a>{% endif %}
                     {% endwith %}
                 </nav>
                 <a class="underlink" href="{% url 'home' %}">На сайт</a>

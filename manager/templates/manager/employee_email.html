@@ -1,0 +1,19 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Почта сотрудника — Миллениум{% endblock %}
+
+{% block content %}
+<div class="wrap page manager-login">
+    <header class="manager-heading"><h1>{% if employee.pk == user.pk %}Моя почта{% else %}Почта сотрудника{% endif %}</h1></header>
+    <form class="inquiry-form" method="post">
+        {% csrf_token %}
+        <p>Логин сотрудника: <strong>{{ employee.username }}</strong></p>
+        {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        {% include "inquiries/partials/field.html" with field=form.email only %}
+        <div class="manager-actions">
+            <button class="btn primary" type="submit">Сохранить</button>
+            <a class="btn secondary" href="{% url 'manager:employees' %}">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

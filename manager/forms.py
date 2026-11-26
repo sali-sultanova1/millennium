@@ -1,5 +1,7 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.core.validators import MaxLengthValidator
+from django.db.models import Q
 
 from accounts.models import User
 from catalog.models import Destination, Tour
@@ -47,8 +49,58 @@ class DestinationForm(forms.ModelForm):
         widgets = {"image": forms.FileInput}
 
 
+class ManagerLoginForm(AuthenticationForm):
+    error_messages = {**AuthenticationForm.error_messages, "invalid_login": "Проверьте логин или почту и пароль."}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        identifier = self.fields["username"]
+        identifier.label = "Логин или электронная почта"
+        identifier.max_length = User._meta.get_field("email").max_length
+        identifier.widget.attrs.update({"maxlength": identifier.max_length, "autocomplete": "username"})
+        identifier.validators.append(MaxLengthValidator(identifier.max_length))
+
+    def clean(self):
+        identifier = self.cleaned_data.get("username")
+        if identifier and "@" in identifier and not User.objects.filter(username=identifier).exists():
+            username = User.objects.filter(email__iexact=identifier).values_list("username", flat=True).first()
+            if username is not None:
+                self.cleaned_data["username"] = username
+
+        return super().clean()
+
+
+def clean_employee_email(email, employee_pk=None):
+    other_users = User.objects.exclude(pk=employee_pk)
+    if other_users.filter(Q(email__iexact=email) | Q(username__iexact=email)).exists():
+        raise forms.ValidationError("Этот адрес уже используется.")
+    return email
+
+
 class EmployeeCreationForm(UserCreationForm):
+    email = forms.EmailField(label="Электронная почта", max_length=254)
+
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "first_name", "last_name")
+        fields = ("username", "email", "first_name", "last_name")
         labels = {"username": "Логин", "first_name": "Имя", "last_name": "Фамилия"}
+
+    def clean_username(self):
+        username = super().clean_username()
+        if username and "@" in username and User.objects.filter(email__iexact=username).exists():
+            raise forms.ValidationError("Этот логин уже используется как электронная почта.")
+        return username
+
+    def clean_email(self):
+        return clean_employee_email(self.cleaned_data["email"])
+
+
+class EmployeeEmailForm(forms.ModelForm):
+    email = forms.EmailField(label="Электронная почта", max_length=254)
+
+    class Meta:
+        model = User
+        fields = ("email",)
+
+    def clean_email(self):
+        return clean_employee_email(self.cleaned_data["email"], self.instance.pk)
