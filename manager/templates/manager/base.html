@@ -31,6 +31,7 @@
                             {{ inquiry_ids|json_script:"new-inquiry-ids" }}
                         {% endif %}
                         {% if user.is_superuser %}<a href="{% url 'manager:employees' %}"{% if current == 'employees' or current == 'employee_email' or current == 'employee_edit' %} aria-current="true"{% endif %}>Сотрудники</a>{% endif %}
+                        {% if perms.catalog.view_tour and not user.is_superuser %}<a href="{% url 'manager:profile' %}"{% if current == 'profile' %} aria-current="page"{% endif %}>Мой профиль</a>{% endif %}
                     {% endwith %}
                 </nav>
                 <a class="underlink" href="{% url 'home' %}">На сайт</a>
