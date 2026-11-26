@@ -124,16 +124,18 @@ class ManagerTeamTests(TestCase):
                 self.assertContains(response, 'id="id_email_error"')
         self.assertFalse(User.objects.filter(username="new-manager").exists())
 
-    def test_employee_phone_is_required_and_validated_on_creation(self):
+    def test_employee_phone_is_optional_and_validated_on_creation(self):
         self.client.force_login(self.owner)
         url = reverse("manager:employees")
         password = "A-unique-test-password-47"
         data = {"username": "new-manager", "email": "new@example.test", "password1": password, "password2": password}
-        for phone in ("", "12345", "invalid"):
+        for phone in ("12345", "invalid"):
             with self.subTest(phone=phone):
                 self.assertContains(self.client.post(url, {**data, "phone": phone}), 'id="id_phone_error"')
 
         self.assertFalse(User.objects.filter(username="new-manager").exists())
+        self.assertRedirects(self.client.post(url, data), url)
+        self.assertEqual(User.objects.get(username="new-manager").phone, "")
 
     def test_owner_adds_email_to_existing_employee_and_both_logins_work(self):
         password = "A-unique-test-password-47"
@@ -180,6 +182,8 @@ class ManagerTeamTests(TestCase):
         self.assertEqual(self.owner.email, "owner@example.test")
 
     def test_owner_can_edit_own_profile(self):
+        self.owner.phone = "+7 (900) 123-45-67"
+        self.owner.save(update_fields=["phone"])
         self.client.force_login(self.owner)
         url = reverse("manager:employee_edit", args=[self.owner.pk])
         employees_url = reverse("manager:employees")
@@ -187,10 +191,11 @@ class ManagerTeamTests(TestCase):
         response = self.client.get(url)
         self.assertContains(response, "<h1>Мой профиль</h1>")
         self.assertNotContains(response, reverse("manager:employee_access", args=[self.owner.pk]))
+        self.assertFalse(response.context["form"].fields["phone"].required)
         data = {
             "username": "new-owner-login",
             "email": "manager-owner@example.test",
-            "phone": "+7 (900) 123-45-67",
+            "phone": "",
             "first_name": "Амина",
             "last_name": "Саидова",
         }
@@ -236,6 +241,10 @@ class ManagerTeamTests(TestCase):
         for value in (*data.values(), "Амина Саидова"):
             self.assertContains(team, value)
         self.assertNotContains(team, "<strong>employee</strong>", html=True)
+        self.assertRedirects(employee_client.post(url, {**data, "phone": ""}), url)
+        self.employee.refresh_from_db()
+        self.assertEqual(self.employee.phone, "")
+        self.assertContains(self.client.get(employees_url), "Телефон не указан")
 
     def test_profile_requires_active_cabinet_access(self):
         url = reverse("manager:profile")
@@ -269,7 +278,7 @@ class ManagerTeamTests(TestCase):
             "is_active": "",
             "is_superuser": "on",
         }
-        self.assertContains(self.client.post(url, {**data, "phone": ""}), 'id="id_phone_error"')
+        self.assertContains(self.client.post(url, {**data, "phone": "12345"}), 'id="id_phone_error"')
         self.assertRedirects(self.client.post(url, data), reverse("manager:employees"))
         self.employee.refresh_from_db()
         for field in ("username", "email", "phone", "first_name", "last_name"):
