@@ -1,12 +1,12 @@
 {% extends "manager/base.html" %}
 
-{% block title %}Редактировать сотрудника — Миллениум{% endblock %}
+{% block title %}{{ page_title }} — Миллениум{% endblock %}
 
 {% block content %}
-<div class="wrap page">
-    <header class="manager-heading"><h1>Редактировать сотрудника</h1></header>
+<div class="wrap page{% if is_own_profile %} manager-login{% endif %}">
+    <header class="manager-heading"><h1>{{ page_title }}</h1></header>
 
-    <div class="manager-employee-layout">
+    <div{% if not is_own_profile %} class="manager-employee-layout"{% endif %}>
         <form class="inquiry-form" method="post">
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
@@ -17,19 +17,21 @@
             </div>
         </form>
 
-        <section aria-labelledby="employee-access-title">
-            <form class="inquiry-form" method="post" action="{% url 'manager:employee_access' employee.pk %}">
-                {% csrf_token %}
-                <h2 id="employee-access-title">Доступ к кабинету</h2>
-                {% if employee.is_active %}
-                    <p>Если отключить доступ, сотрудник выйдет из кабинета и перестанет получать уведомления.</p>
-                    <button class="btn secondary" type="submit" name="action" value="disable">Отключить доступ</button>
-                {% else %}
-                    <p>Доступ закрыт. После включения сотрудник сможет снова войти в кабинет.</p>
-                    <button class="btn secondary" type="submit" name="action" value="enable">Включить доступ</button>
-                {% endif %}
-            </form>
-        </section>
+        {% if not is_own_profile %}
+            <section aria-labelledby="employee-access-title">
+                <form class="inquiry-form" method="post" action="{% url 'manager:employee_access' employee.pk %}">
+                    {% csrf_token %}
+                    <h2 id="employee-access-title">Доступ к кабинету</h2>
+                    {% if employee.is_active %}
+                        <p>Если отключить доступ, сотрудник выйдет из кабинета и перестанет получать уведомления.</p>
+                        <button class="btn secondary" type="submit" name="action" value="disable">Отключить доступ</button>
+                    {% else %}
+                        <p>Доступ закрыт. После включения сотрудник сможет снова войти в кабинет.</p>
+                        <button class="btn secondary" type="submit" name="action" value="enable">Включить доступ</button>
+                    {% endif %}
+                </form>
+            </section>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

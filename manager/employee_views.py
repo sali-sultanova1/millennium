@@ -20,6 +20,12 @@ def employee_accounts():
     return User.objects.filter(groups__name=MANAGERS_GROUP_NAME, is_superuser=False)
 
 
+def editable_accounts(owner_pk):
+    return User.objects.filter(
+        Q(groups__name=MANAGERS_GROUP_NAME, is_superuser=False) | Q(pk=owner_pk),
+    ).distinct()
+
+
 def add_employee_conflict_error(form):
     other_users = User.objects.exclude(pk=form.instance.pk)
     username = form.cleaned_data.get("username")
@@ -69,10 +75,7 @@ def employee_email_view(request, pk):
     if not request.user.is_superuser:
         raise PermissionDenied
 
-    eligible_users = User.objects.filter(
-        Q(groups__name=MANAGERS_GROUP_NAME, is_superuser=False) | Q(pk=request.user.pk),
-    ).distinct()
-    employee = get_object_or_404(eligible_users, pk=pk)
+    employee = get_object_or_404(editable_accounts(request.user.pk), pk=pk)
     form = EmployeeEmailForm(request.POST if request.method == "POST" else None, instance=employee)
     if request.method == "POST" and form.is_valid():
         try:
@@ -95,7 +98,8 @@ def employee_edit_view(request, pk):
     if not request.user.is_superuser:
         raise PermissionDenied
 
-    employee = get_object_or_404(employee_accounts(), pk=pk)
+    employee = get_object_or_404(editable_accounts(request.user.pk), pk=pk)
+    is_own_profile = employee.pk == request.user.pk
     form = EmployeeDetailsForm(request.POST if request.method == "POST" else None, instance=employee)
     if request.method == "POST" and form.is_valid():
         try:
@@ -105,10 +109,18 @@ def employee_edit_view(request, pk):
             if not add_employee_conflict_error(form):
                 raise
         else:
-            messages.success(request, f"Данные сотрудника «{employee.username}» сохранены.")
+            if is_own_profile:
+                messages.success(request, "Профиль сохранён.")
+            else:
+                messages.success(request, f"Данные сотрудника «{employee.username}» сохранены.")
             return redirect("manager:employees")
 
-    return render(request, "manager/employee_edit.html", {"form": form, "employee": employee})
+    return render(request, "manager/employee_edit.html", {
+        "form": form,
+        "employee": employee,
+        "is_own_profile": is_own_profile,
+        "page_title": "Мой профиль" if is_own_profile else "Редактировать сотрудника",
+    })
 
 
 @never_cache

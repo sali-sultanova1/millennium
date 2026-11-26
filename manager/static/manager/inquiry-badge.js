@@ -6,7 +6,6 @@ if (inquiriesLink) {
     const announcement = document.querySelector("[data-inquiry-announcement]");
     const notice = document.querySelector("[data-inquiry-notice]");
     const noticeText = notice.querySelector("[data-inquiry-notice-text]");
-    const originalTitle = document.title;
     let previousIds = new Set(JSON.parse(document.getElementById("new-inquiry-ids").textContent));
     let noticeIds = [];
     let checking = false;
@@ -14,7 +13,6 @@ if (inquiriesLink) {
     function updateIndicator(ids) {
         const hasNew = ids.size > 0;
         dot.hidden = !hasNew;
-        document.title = hasNew ? `● ${originalTitle}` : originalTitle;
         const message = hasNew ? `Новые заявки (${ids.size})` : "";
         if (count.textContent !== message) count.textContent = message;
     }
