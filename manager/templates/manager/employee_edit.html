@@ -1,0 +1,35 @@
+{% extends "manager/base.html" %}
+
+{% block title %}Редактировать сотрудника — Миллениум{% endblock %}
+
+{% block content %}
+<div class="wrap page">
+    <header class="manager-heading"><h1>Редактировать сотрудника</h1></header>
+
+    <div class="manager-employee-layout">
+        <form class="inquiry-form" method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+            {% include "manager/employee_fields.html" with form=form only %}
+            <div class="manager-actions">
+                <button class="btn primary" type="submit">Сохранить</button>
+                <a class="btn secondary" href="{% url 'manager:employees' %}">К сотрудникам</a>
+            </div>
+        </form>
+
+        <section aria-labelledby="employee-access-title">
+            <form class="inquiry-form" method="post" action="{% url 'manager:employee_access' employee.pk %}">
+                {% csrf_token %}
+                <h2 id="employee-access-title">Доступ к кабинету</h2>
+                {% if employee.is_active %}
+                    <p>Если отключить доступ, сотрудник выйдет из кабинета и перестанет получать уведомления.</p>
+                    <button class="btn secondary" type="submit" name="action" value="disable">Отключить доступ</button>
+                {% else %}
+                    <p>Доступ закрыт. После включения сотрудник сможет снова войти в кабинет.</p>
+                    <button class="btn secondary" type="submit" name="action" value="enable">Включить доступ</button>
+                {% endif %}
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}

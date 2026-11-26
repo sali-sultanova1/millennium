@@ -1,5 +1,9 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    UserCreationForm,
+    UsernameField,
+)
 from django.core.validators import MaxLengthValidator
 from django.db.models import Q
 
@@ -70,29 +74,20 @@ class ManagerLoginForm(AuthenticationForm):
         return super().clean()
 
 
+def clean_employee_username(username, employee_pk=None):
+    other_users = User.objects.exclude(pk=employee_pk)
+    if other_users.filter(username__iexact=username).exists():
+        raise forms.ValidationError("Сотрудник с таким логином уже существует.")
+    if "@" in username and other_users.filter(email__iexact=username).exists():
+        raise forms.ValidationError("Этот логин уже используется как электронная почта.")
+    return username
+
+
 def clean_employee_email(email, employee_pk=None):
     other_users = User.objects.exclude(pk=employee_pk)
     if other_users.filter(Q(email__iexact=email) | Q(username__iexact=email)).exists():
         raise forms.ValidationError("Этот адрес уже используется.")
     return email
-
-
-class EmployeeCreationForm(UserCreationForm):
-    email = forms.EmailField(label="Электронная почта", max_length=254)
-
-    class Meta(UserCreationForm.Meta):
-        model = User
-        fields = ("username", "email", "first_name", "last_name")
-        labels = {"username": "Логин", "first_name": "Имя", "last_name": "Фамилия"}
-
-    def clean_username(self):
-        username = super().clean_username()
-        if username and "@" in username and User.objects.filter(email__iexact=username).exists():
-            raise forms.ValidationError("Этот логин уже используется как электронная почта.")
-        return username
-
-    def clean_email(self):
-        return clean_employee_email(self.cleaned_data["email"])
 
 
 class EmployeeEmailForm(forms.ModelForm):
@@ -104,3 +99,35 @@ class EmployeeEmailForm(forms.ModelForm):
 
     def clean_email(self):
         return clean_employee_email(self.cleaned_data["email"], self.instance.pk)
+
+
+class EmployeeDetailsForm(EmployeeEmailForm):
+    phone = forms.CharField(
+        label="Телефон", max_length=30, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}),
+    )
+
+    class Meta(EmployeeEmailForm.Meta):
+        fields = ("username", "email", "phone", "first_name", "last_name")
+        labels = {"username": "Логин", "first_name": "Имя", "last_name": "Фамилия"}
+        field_classes = {"username": UsernameField}
+
+    def clean_username(self):
+        return clean_employee_username(self.cleaned_data["username"], self.instance.pk)
+
+
+class EmployeeCreationForm(UserCreationForm):
+    email = forms.EmailField(label="Электронная почта", max_length=254)
+    phone = forms.CharField(
+        label="Телефон", max_length=30, widget=forms.TextInput(attrs={"type": "tel", "autocomplete": "tel"}),
+    )
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = EmployeeDetailsForm.Meta.fields
+        labels = EmployeeDetailsForm.Meta.labels
+
+    def clean_username(self):
+        return clean_employee_username(self.cleaned_data["username"])
+
+    def clean_email(self):
+        return clean_employee_email(self.cleaned_data["email"])

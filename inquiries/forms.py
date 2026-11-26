@@ -1,5 +1,7 @@
 from django import forms
 
+from accounts.validators import validate_phone_number
+
 from .models import Inquiry
 
 
@@ -40,31 +42,7 @@ class InquiryForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = self.cleaned_data["phone"]
-        allowed_characters = "0123456789+() -"
-
-        for character in phone:
-            if character not in allowed_characters:
-                raise forms.ValidationError(
-                    "Введите корректный номер телефона."
-                )
-
-        if "+" in phone:
-            if phone.count("+") != 1 or not phone.startswith("+"):
-                raise forms.ValidationError(
-                    "Введите корректный номер телефона."
-                )
-
-        digits_count = 0
-
-        for character in phone:
-            if character.isdigit():
-                digits_count += 1
-
-        if not 7 <= digits_count <= 15:
-            raise forms.ValidationError(
-                "Введите корректный номер телефона."
-            )
-
+        validate_phone_number(phone)
         return phone
 
     def clean(self):

@@ -25,5 +25,7 @@ urlpatterns = [
     path("inquiries/<int:pk>/work/", inquiry_views.inquiry_work_view, name="inquiry_work"),
     path("inquiries/<int:pk>/delete/", inquiry_views.inquiry_delete_view, name="inquiry_delete"),
     path("employees/", employee_views.employees_view, name="employees"),
+    path("employees/<int:pk>/edit/", employee_views.employee_edit_view, name="employee_edit"),
+    path("employees/<int:pk>/access/", employee_views.employee_access_view, name="employee_access"),
     path("employees/<int:pk>/email/", employee_views.employee_email_view, name="employee_email"),
 ]

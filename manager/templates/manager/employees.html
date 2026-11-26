@@ -15,12 +15,7 @@
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="alert" role="alert">{{ form.non_field_errors }}</div>{% endif %}
 
-            {% include "inquiries/partials/field.html" with field=form.username only %}
-            {% include "inquiries/partials/field.html" with field=form.email only %}
-            <div class="field-grid">
-                {% include "inquiries/partials/field.html" with field=form.first_name only %}
-                {% include "inquiries/partials/field.html" with field=form.last_name only %}
-            </div>
+            {% include "manager/employee_fields.html" with form=form only %}
             {% include "inquiries/partials/field.html" with field=form.password1 only %}
             {% include "inquiries/partials/field.html" with field=form.password2 only %}
 
@@ -39,7 +34,8 @@
                                     {% if full_name %}<small class="muted">{{ employee.username }}</small>{% endif %}
                                 {% endwith %}
                                 <small class="muted">{{ employee.email|default:"Почта не указана" }}</small>
-                                <a class="underlink" href="{% url 'manager:employee_email' employee.pk %}">{% if employee.email %}Изменить почту{% else %}Добавить почту{% endif %}</a>
+                                <small class="muted">{{ employee.phone|default:"Телефон не указан" }}</small>
+                                <a class="underlink" href="{% url 'manager:employee_edit' employee.pk %}">Редактировать</a>
                             </div>
                             <span class="manager-status {% if employee.is_active %}live{% endif %}">{{ employee.is_active|yesno:"Доступ открыт,Доступ закрыт" }}</span>
                         </li>
