@@ -1,6 +1,11 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Контакты — Миллениум{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'pages/agency.css' %}?v=contacts">
+{% endblock %}
 
 {% block content %}
 <header class="page-banner">
@@ -10,4 +15,35 @@
         <a class="btn primary" href="{% url 'inquiries:create' %}">Подобрать тур</a>
     </div>
 </header>
+<div class="wrap page agency-services">
+    <section class="surface agency-card" aria-labelledby="contacts-office">
+        <h2 id="contacts-office">Офис в Ставрополе</h2>
+        {% with office_address="Ставрополь, ул. 50 лет ВЛКСМ, 28А" %}
+            <address class="agency-address">{{ office_address }}<br>ТЦ «Милан», 3-й этаж, офис 1</address>
+            <a class="underlink" href="https://yandex.ru/maps/?text={{ office_address|urlencode }}">Посмотреть на карте</a>
+        {% endwith %}
+        <dl class="agency-hours">
+            <div><dt>Пн–пт</dt><dd>10:00–17:00</dd></div>
+            <div><dt>Сб</dt><dd>11:00–16:00</dd></div>
+            <div><dt>Вс</dt><dd>Выходной</dd></div>
+        </dl>
+    </section>
+
+    <section class="surface agency-card" aria-labelledby="contacts-agency">
+        <h2 id="contacts-agency">Связаться с агентством</h2>
+        <address class="agency-contact-links agency-address">
+            {% include "pages/partials/office_links.html" only %}
+            <a href="https://wa.me/79633861818">WhatsApp агентства</a>
+        </address>
+    </section>
+
+    <section class="surface agency-card" aria-labelledby="contacts-manager">
+        <h2 id="contacts-manager">Галимат Султанова</h2>
+        <p>Менеджер по подбору туров</p>
+        <address class="agency-contact-links agency-address">
+            <a href="tel:+79993799515">+7 (999) 379-95-15</a>
+            <a href="https://t.me/galima_sultanova">Написать в Telegram</a>
+        </address>
+    </section>
+</div>
 {% endblock %}
