@@ -13,7 +13,11 @@
             {% include "manager/employee_fields.html" with form=form only %}
             <div class="manager-actions">
                 <button class="btn primary" type="submit">Сохранить</button>
-                <a class="btn secondary" href="{% url 'manager:employees' %}">К сотрудникам</a>
+                {% if user.is_superuser %}
+                    <a class="btn secondary" href="{% url 'manager:employees' %}">К сотрудникам</a>
+                {% else %}
+                    <a class="btn secondary" href="{% url 'manager:tour_list' %}">К турам</a>
+                {% endif %}
             </div>
         </form>
 

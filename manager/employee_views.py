@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.db import IntegrityError, transaction
@@ -99,6 +99,18 @@ def employee_edit_view(request, pk):
         raise PermissionDenied
 
     employee = get_object_or_404(editable_accounts(request.user.pk), pk=pk)
+    return edit_employee_details(request, employee)
+
+
+@never_cache
+@login_required(login_url="manager:login")
+@permission_required("catalog.view_tour", raise_exception=True)
+@require_http_methods(["GET", "POST"])
+def profile_view(request):
+    return edit_employee_details(request, request.user)
+
+
+def edit_employee_details(request, employee):
     is_own_profile = employee.pk == request.user.pk
     form = EmployeeDetailsForm(request.POST if request.method == "POST" else None, instance=employee)
     if request.method == "POST" and form.is_valid():
@@ -113,7 +125,7 @@ def employee_edit_view(request, pk):
                 messages.success(request, "Профиль сохранён.")
             else:
                 messages.success(request, f"Данные сотрудника «{employee.username}» сохранены.")
-            return redirect("manager:employees")
+            return redirect("manager:employees" if request.user.is_superuser else "manager:profile")
 
     return render(request, "manager/employee_edit.html", {
         "form": form,

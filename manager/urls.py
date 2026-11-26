@@ -18,6 +18,7 @@ urlpatterns = [
     path("directions/<int:pk>/delete/", views.destination_delete_view, name="destination_delete"),
     path("login/", LoginView.as_view(template_name="manager/login.html", authentication_form=ManagerLoginForm, next_page="manager:tour_list"), name="login"),
     path("logout/", LogoutView.as_view(next_page="manager:login"), name="logout"),
+    path("profile/", employee_views.profile_view, name="profile"),
     path("tours/<int:pk>/delete/", views.tour_delete_view, name="tour_delete"),
     path("inquiries/", inquiry_views.inquiry_list_view, name="inquiry_list"),
     path("inquiries/status/", inquiry_views.inquiry_status_view, name="inquiry_status"),

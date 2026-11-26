@@ -202,6 +202,53 @@ class ManagerTeamTests(TestCase):
         self.assertTrue(self.owner.is_active)
         self.assertEqual(self.client.session["_auth_user_id"], str(self.owner.pk))
 
+    def test_employee_updates_own_account_and_owner_sees_new_details(self):
+        employee_client = Client()
+        employee_client.force_login(self.employee)
+        url = reverse("manager:profile")
+        self.client.force_login(self.owner)
+        employees_url = reverse("manager:employees")
+        self.assertContains(self.client.get(employees_url), "<strong>employee</strong>", html=True)
+        tours = employee_client.get(reverse("manager:tour_list"))
+        self.assertContains(tours, f'href="{url}">Мой профиль</a>')
+        profile = employee_client.get(url)
+        self.assertContains(profile, "<h1>Мой профиль</h1>", html=True)
+        self.assertNotContains(profile, reverse("manager:employee_access", args=[self.employee.pk]))
+
+        data = {
+            "username": "updated-login",
+            "email": "updated@example.test",
+            "phone": "+7 (900) 123-45-67",
+            "first_name": "Амина",
+            "last_name": "Саидова",
+        }
+        response = employee_client.post(url, {**data, "pk": self.owner.pk, "is_superuser": "on"})
+        self.assertRedirects(response, url)
+        self.employee.refresh_from_db()
+        self.owner.refresh_from_db()
+        self.assertEqual(self.employee.username, data["username"])
+        self.assertEqual(self.employee.email, data["email"])
+        self.assertFalse(self.employee.is_superuser)
+        self.assertEqual(self.owner.username, "owner")
+        self.assertEqual(employee_client.session["_auth_user_id"], str(self.employee.pk))
+
+        team = self.client.get(employees_url)
+        for value in (*data.values(), "Амина Саидова"):
+            self.assertContains(team, value)
+        self.assertNotContains(team, "<strong>employee</strong>", html=True)
+
+    def test_profile_requires_active_cabinet_access(self):
+        url = reverse("manager:profile")
+        login_url = reverse("manager:login")
+        self.assertRedirects(self.client.get(url), f"{login_url}?next={url}")
+        self.client.force_login(User.objects.create_user(username="visitor"))
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertEqual(self.client.post(url, {}).status_code, 403)
+
+        self.client.force_login(self.employee)
+        User.objects.filter(pk=self.employee.pk).update(is_active=False)
+        self.assertRedirects(self.client.get(url), f"{login_url}?next={url}")
+
     def test_owner_cannot_edit_another_owner_profile(self):
         other = User.objects.create_superuser(username="another-owner")
         other.groups.add(self.group)
