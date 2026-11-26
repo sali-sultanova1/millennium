@@ -565,6 +565,32 @@ textarea { resize: vertical; }
 .manager-nav a:hover, .manager-tabs a:hover { background: var(--wash); }
 .manager-nav a[aria-current], .manager-tabs a[aria-current] { background: #e3eff7; }
 .manager-inquiry-dot { flex: none; width: .5rem; height: .5rem; margin-inline-start: .35rem; border-radius: 50%; background: var(--rose); }
+.manager-inquiry-notice {
+    position: fixed;
+    z-index: 10;
+    inset-inline-end: 1rem;
+    inset-block-end: max(1rem, env(safe-area-inset-bottom));
+    width: min(22rem, calc(100% - 2rem));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .75rem 1rem;
+    border-inline-start: .25rem solid var(--rose);
+    color: var(--navy);
+}
+.manager-inquiry-dismiss {
+    appearance: none;
+    border: 0;
+    border-radius: .5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: none;
+    background: var(--wash);
+    color: var(--navy);
+    font-size: 1.4rem;
+}
+.manager-inquiry-dismiss:hover { background: #e3eff7; }
 .manager-employee-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); align-items: start; gap: 1.5rem; }
 .manager-employee-layout h2 { font-size: 1.25rem; }
 .manager-employee-list { display: grid; gap: .8rem; }

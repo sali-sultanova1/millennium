@@ -7,8 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Кабинет менеджера — Миллениум{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'catalog/images/millennium-emblem.png' %}?v=2">
-    <link rel="stylesheet" href="{% static 'catalog/styles.css' %}?v=tour-filters">
-    {% if perms.inquiries.view_inquiry %}<script src="{% static 'manager/inquiry-badge.js' %}?v=2" defer></script>{% endif %}
+    <link rel="stylesheet" href="{% static 'catalog/styles.css' %}?v=inquiry-notifications">
+    {% if perms.inquiries.view_inquiry %}<script src="{% static 'manager/inquiry-badge.js' %}?v=3" defer></script>{% endif %}
     {% block extra_head %}{% endblock %}
 </head>
 <body class="manager-shell">
@@ -23,11 +23,12 @@
                         {% if perms.catalog.view_tour %}<a href="{% url 'manager:tour_list' %}"{% if current == 'tour_list' or current == 'tour_create' or current == 'tour_edit' or current == 'tour_delete' %} aria-current="true"{% endif %}>Туры</a>{% endif %}
                         {% if perms.catalog.view_destination %}<a href="{% url 'manager:destination_list' %}"{% if current == 'destination_list' or current == 'destination_create' or current == 'destination_edit' or current == 'destination_delete' %} aria-current="true"{% endif %}>Направления</a>{% endif %}
                         {% if perms.inquiries.view_inquiry %}
-                            {% has_new_inquiries as has_new %}
+                            {% new_inquiry_ids as inquiry_ids %}
                             <a href="{% url 'manager:inquiry_list' %}" data-inquiry-status-url="{% url 'manager:inquiry_status' %}"{% if current == 'inquiry_list' or current == 'inquiry_detail' or current == 'inquiry_delete' %} aria-current="true"{% endif %}>
-                                Заявки <span class="manager-inquiry-dot" data-inquiry-dot aria-hidden="true"{% if not has_new %} hidden{% endif %}></span>
-                                <span class="sr-only" data-inquiry-announcement role="status">{% if has_new %}Есть новые заявки{% endif %}</span>
+                                Заявки <span class="manager-inquiry-dot" data-inquiry-dot aria-hidden="true"{% if not inquiry_ids %} hidden{% endif %}></span>
+                                <span class="sr-only" data-inquiry-count>{% if inquiry_ids %}Есть новые заявки{% endif %}</span>
                             </a>
+                            {{ inquiry_ids|json_script:"new-inquiry-ids" }}
                         {% endif %}
                         {% if user.is_superuser %}<a href="{% url 'manager:employees' %}"{% if current == 'employees' %} aria-current="true"{% endif %}>Сотрудники</a>{% endif %}
                     {% endwith %}
@@ -49,6 +50,17 @@
         {% endfor %}
         {% block content %}{% endblock %}
     </main>
+
+    {% if perms.inquiries.view_inquiry %}
+        <p class="sr-only" data-inquiry-announcement role="status"></p>
+        <aside class="surface manager-inquiry-notice" data-inquiry-notice hidden>
+            <div>
+                <strong data-inquiry-notice-text>Новая заявка</strong><br>
+                <a class="underlink" href="{% url 'manager:inquiry_list' %}?status=new">Открыть новые заявки</a>
+            </div>
+            <button type="button" class="manager-inquiry-dismiss" data-inquiry-dismiss aria-label="Закрыть уведомление">×</button>
+        </aside>
+    {% endif %}
 </body>
 </html>
 {% endlanguage %}

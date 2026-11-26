@@ -1,7 +1,20 @@
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage
 from django.db import transaction
+from django.urls import reverse
 
 from .models import Inquiry, InquiryTour
+
+
+def send_inquiry_notification(inquiry_id):
+    path = reverse("manager:inquiry_detail", args=[inquiry_id])
+    url = f"{settings.INQUIRY_NOTIFICATION_BASE_URL}{path}"
+    EmailMessage(
+        subject=f"Миллениум — новая заявка №{inquiry_id}",
+        body=f"На сайте оставили новую заявку.\n\nОткрыть в кабинете менеджера\n{url}",
+        bcc=settings.INQUIRY_NOTIFICATION_EMAILS,
+    ).send()
 
 
 def create_inquiry(form, source, tours):
@@ -58,5 +71,8 @@ def create_inquiry(form, source, tours):
                 price_details_snapshot=tour.price_details,
                 price_from_snapshot=tour.price_from,
             )
+
+        if settings.INQUIRY_NOTIFICATION_EMAILS:
+            transaction.on_commit(lambda: send_inquiry_notification(inquiry.pk), robust=True)
 
     return inquiry

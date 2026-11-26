@@ -1,9 +1,11 @@
 from datetime import date
 from decimal import Decimal
+from smtplib import SMTPException
 from unittest.mock import patch
 
+from django.core import mail
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from catalog.models import Destination, Tour
@@ -328,14 +330,19 @@ class InquiryServiceTests(TestCase):
         self.assertEqual(item.title_snapshot, "Отдых в Китае")
         self.assertEqual(item.price_snapshot, Decimal("260000.00"))
 
+    @override_settings(INQUIRY_NOTIFICATION_EMAILS=["team@example.test"])
     def test_snapshot_failure_rolls_back_inquiry(self):
         form = InquiryForm(data=self.data)
         self.assertTrue(form.is_valid(), form.errors)
 
-        with patch("inquiries.services.InquiryTour.objects.create", side_effect=RuntimeError("Ошибка сохранения снимка")):
-            with self.assertRaises(RuntimeError):
-                create_inquiry(form, Inquiry.Source.TOUR, [self.tour])
+        with (
+            self.captureOnCommitCallbacks() as callbacks,
+            patch("inquiries.services.InquiryTour.objects.create", side_effect=RuntimeError("Ошибка сохранения снимка")),
+            self.assertRaises(RuntimeError),
+        ):
+            create_inquiry(form, Inquiry.Source.TOUR, [self.tour])
 
+        self.assertEqual(callbacks, [])
         self.assertEqual(Inquiry.objects.count(), 0)
         self.assertEqual(InquiryTour.objects.count(), 0)
 
@@ -367,6 +374,42 @@ class InquiryViewTests(TestCase):
         self.assertEqual(inquiry.source, Inquiry.Source.SELECTION)
         self.assertEqual(inquiry.status, Inquiry.Status.NEW)
         self.assertEqual(inquiry.selected_tours.count(), 0)
+
+    @override_settings(
+        INQUIRY_NOTIFICATION_EMAILS=["team@example.test", "manager@example.test"],
+        INQUIRY_NOTIFICATION_BASE_URL="https://agency.example.test",
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    )
+    def test_valid_post_sends_notification_after_commit(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(self.url, self.data)
+            self.assertEqual(mail.outbox, [])
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+        self.assertEqual(len(mail.outbox), 1)
+        inquiry = Inquiry.objects.get()
+        message = mail.outbox[0]
+        path = reverse("manager:inquiry_detail", args=[inquiry.pk])
+        self.assertIn(f"№{inquiry.pk}", message.subject)
+        self.assertIn(f"https://agency.example.test{path}", message.body)
+        self.assertNotIn(inquiry.name, message.body)
+        self.assertNotIn(inquiry.phone, message.body)
+        self.assertEqual(message.bcc, ["team@example.test", "manager@example.test"])
+
+    @override_settings(
+        INQUIRY_NOTIFICATION_EMAILS=["team@example.test"],
+        INQUIRY_NOTIFICATION_BASE_URL="https://agency.example.test",
+    )
+    def test_email_failure_preserves_submitted_inquiry(self):
+        with (
+            self.assertLogs("django.test", level="ERROR"),
+            patch("inquiries.services.EmailMessage.send", side_effect=SMTPException("SMTP unavailable")),
+            self.captureOnCommitCallbacks(execute=True),
+        ):
+            response = self.client.post(self.url, self.data)
+
+        self.assertRedirects(response, reverse("inquiries:success"))
+        self.assertEqual(Inquiry.objects.get().status, Inquiry.Status.NEW)
 
     def test_invalid_post_does_not_create_inquiry(self):
         self.data["phone"] = "abcdefg"
