@@ -1,425 +1,100 @@
-# News Platform
+# Миллениум
 
-A full-stack Django news and publishing platform with role-based access, article moderation, social interactions, REST API support, Redis caching, PostgreSQL, Docker, and automated tests.
+Сайт туристического агентства с каталогом туров и кабинетом для сотрудников. Посетитель может выбрать несколько предложений и отправить их одной заявкой. Менеджер увидит выбранные туры и контакты клиента, сможет взять заявку в работу и довести её до архива.
 
-The project is designed around a complete publishing workflow: a registered user can become an author, create a draft, submit it for moderation, and publish it after staff approval. Readers can browse published articles, search and filter content, like articles, save bookmarks, and participate in discussions.
+Дипломный проект по разработке веб-приложений на Python в Компьютерной Академии ТОП.
 
-## Features
+[Демоверсия на Render](https://millennium-demo.onrender.com/)
 
-### Accounts and roles
+## Документация
 
-The platform supports several access levels:
+- [Кабинет сотрудников](docs/manager-guide.md) — как опубликовать тур, обработать заявку и добавить сотрудника.
+- [Архитектура](docs/architecture.md) — как устроены каталог, заявки, права и хранение фотографий.
+- [Тестирование](docs/testing.md) — как запустить проверки и пройти основные сценарии вручную.
 
-- **Guest** — can browse published articles and use search/filtering.
-- **Registered user** — can manage a profile, like articles, save bookmarks, and comment.
-- **Author** — has all registered-user capabilities and can create, edit, submit, and manage their own articles.
-- **Staff** — can review submitted articles and approve or reject them.
+## Возможности
 
-Authentication supports login with either a **username or email address**.
+| Роль | Что можно делать |
+| --- | --- |
+| Посетитель | Искать туры по направлению, городу вылета, датам, длительности, питанию и цене. Сохранять варианты в избранном без регистрации. Оставлять заявку на один тур, отправлять подборку или описывать пожелания к поездке. |
+| Менеджер | Добавлять направления и туры, сохранять черновики, менять порядок фотографий, публиковать и снимать предложения с публикации. Просматривать заявки, брать их в работу и завершать. |
+| Владелец | Работать с каталогом и заявками, создавать учётные записи сотрудников, редактировать их данные и управлять доступом к кабинету. |
 
-### Article workflow
+## Как проходит заявка
 
-Articles follow a controlled moderation lifecycle:
+1. Клиент добавляет туры в избранное и нажимает «Обсудить выбранные туры».
+2. Заявка появляется в кабинете со статусом «Новая». Вместе с контактами сохраняются выбранные туры и их условия на момент отправки.
+3. Менеджер нажимает «Взять в работу». Система назначает ответственного и переводит заявку в статус «В работе».
+4. После общения с клиентом менеджер завершает заявку. Она попадает в архив со статусом «Завершена».
 
-```text
-Draft
-  ↓
-Submitted
-  ↓
-Moderation
-  ├── Published
-  └── Rejected
-        ↓
-      Edit and resubmit
-```
+Если агентство обновит цену в каталоге, в заявке будет доступна цена на момент отправки. Заявка и выбранные туры сохраняются в одной транзакции. Если два сотрудника одновременно попытаются взять одну заявку, ответственного назначит первый успешный запрос.
 
-Authors can:
+## Технологии
 
-- create articles as drafts;
-- add a title, slug, summary, body, cover image, categories, and tags;
-- edit drafts and rejected articles;
-- submit articles for moderation;
-- delete their own articles;
-- view the current status of each article.
+| Часть проекта | Технологии |
+| --- | --- |
+| Сервер и интерфейс | Python 3.14, Django 5.2, Django Templates, HTML, CSS и JavaScript |
+| База данных | PostgreSQL 17 |
+| Фотографии | Локальное хранилище или Yandex Object Storage |
+| Почтовые уведомления | Django EmailBackend, отправка по SMTP |
+| Запуск и проверки | Docker Compose, Django TestCase, Ruff и GitHub Actions |
 
-Staff users can:
+## Локальный запуск
 
-- access the moderation queue;
-- review submitted content;
-- publish or reject an article;
-- leave a moderation comment;
-- preserve moderation history.
-
-### Reader interactions
-
-Authenticated readers can:
-
-- like and unlike published articles;
-- save and remove bookmarks;
-- add comments;
-- edit their own comments;
-- delete their own comments;
-- view author profiles.
-
-Likes, bookmarks, and comments are updated through the REST API without requiring a full page reload.
-
-### Search and discovery
-
-The article feed supports:
-
-- text search;
-- category filtering;
-- tag filtering;
-- API-backed live updates;
-- pagination.
-
-Only published articles are exposed publicly.
-
-### Author profiles
-
-Author pages include:
-
-- profile information;
-- specialization and portfolio link when available;
-- published articles;
-- total published article count;
-- total likes;
-- total comments.
-
-## UI
-
-The interface uses a responsive editorial/social design with:
-
-- featured article layouts;
-- article cover images;
-- responsive article grids;
-- dedicated reading views;
-- profile and author pages;
-- styled authentication and editing forms;
-- moderation screens;
-- bookmarks;
-- comments and reaction controls;
-- custom error pages.
-
-The frontend is implemented with Django templates, CSS, and vanilla JavaScript.
-
-## REST API
-
-The project includes a Django REST Framework API.
-
-Main endpoints:
-
-```text
-/api/articles/
-/api/categories/
-/api/tags/
-/api/comments/
-```
-
-JWT authentication:
-
-```text
-/api/token/
-/api/token/refresh/
-```
-
-API documentation:
-
-```text
-/api/docs/
-/api/schema/
-```
-
-The API enforces the same core business rules as the web interface, including article visibility, author permissions, published-article restrictions, comment ownership, and draft protection.
-
-## Technology stack
-
-### Backend
-
-- Python 3.14
-- Django 6.1.2
-- Django REST Framework 3.18.3
-- SimpleJWT
-- django-filter
-- drf-spectacular
-
-### Database and infrastructure
-
-- PostgreSQL 17
-- Redis 8
-- Docker
-- Docker Compose
-- WhiteNoise
-
-### Frontend
-
-- Django Templates
-- HTML5
-- CSS3
-- Vanilla JavaScript
-
-### Development and quality
-
-- Django Debug Toolbar
-- Django test framework
-- DRF test utilities
-- GitHub Actions
-
-## Project structure
-
-```text
-news-platform/
-├── accounts/
-│   ├── migrations/
-│   ├── templates/
-│   ├── backends.py
-│   ├── forms.py
-│   ├── models.py
-│   ├── tests.py
-│   ├── urls.py
-│   └── views.py
-│
-├── articles/
-│   ├── migrations/
-│   ├── templates/
-│   ├── api_permissions.py
-│   ├── api_views.py
-│   ├── filters.py
-│   ├── forms.py
-│   ├── models.py
-│   ├── serializers.py
-│   ├── signals.py
-│   ├── tests.py
-│   ├── tests_system.py
-│   ├── urls.py
-│   └── views.py
-│
-├── interactions/
-│   ├── migrations/
-│   ├── templates/
-│   ├── api_permissions.py
-│   ├── api_views.py
-│   ├── forms.py
-│   ├── models.py
-│   ├── serializers.py
-│   ├── tests.py
-│   ├── urls.py
-│   └── views.py
-│
-├── core/
-│   ├── api_urls.py
-│   ├── middleware.py
-│   ├── settings.py
-│   ├── urls.py
-│   ├── views.py
-│   ├── asgi.py
-│   └── wsgi.py
-│
-├── static/
-│   ├── css/
-│   └── js/
-│
-├── templates/
-│   ├── errors/
-│   └── base.html
-│
-├── .github/
-│   └── workflows/
-│       └── tests.yml
-│
-├── .dockerignore
-├── .env.example
-├── .gitignore
-├── Dockerfile
-├── docker-compose.yml
-├── manage.py
-└── requirements.txt
-```
-
-### Application responsibilities
-
-`accounts` contains authentication, the custom user model, profiles, author profiles, and the username-or-email authentication backend.
-
-`articles` contains the publishing domain: articles, categories, tags, moderation, article permissions, API endpoints, filters, serializers, and the publication workflow.
-
-`interactions` contains reader activity such as comments, likes, and bookmarks.
-
-`core` contains project-level configuration, routing, middleware, API routing, and custom error handlers.
-
-This keeps account, publishing, interaction, and project infrastructure concerns separated into independent Django applications.
-
-## Local setup
-
-### Requirements
-
-Install:
-
-- Docker
-- Docker Compose
-- Git
-
-Clone the repository:
+Понадобятся Git и Docker с Docker Compose. На macOS можно использовать Docker Desktop.
 
 ```bash
-git clone https://github.com/sali-sultanova1/blog-prog.git
-cd blog-prog
-```
-
-Create the local environment file:
-
-```bash
+git clone https://github.com/sali-sultanova1/millennium.git
+cd millennium
 cp .env.example .env
-```
-
-The default `.env.example` is configured for local development.
-
-Build and start the services:
-
-```bash
 docker compose up -d --build
-```
-
-Apply database migrations:
-
-```bash
 docker compose exec web python manage.py migrate
-```
-
-Create an administrator account:
-
-```bash
 docker compose exec web python manage.py createsuperuser
 ```
 
-The application is then available at:
+| Страница | Локальный адрес |
+| --- | --- |
+| Главная | [127.0.0.1:8000](http://127.0.0.1:8000/) |
+| Каталог | [127.0.0.1:8000/tours/](http://127.0.0.1:8000/tours/) |
+| Кабинет сотрудников | [127.0.0.1:8000/manager/](http://127.0.0.1:8000/manager/) |
+| Администрирование Django | [127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/) |
 
-```text
-http://localhost:8000/
-```
+### Первый тур
 
-Django admin:
+Войди в кабинет с учётной записью, созданной через `createsuperuser`. В разделе «Направления» добавь направление и включи его показ на сайте. Затем создай тур, выбери это направление, укажи будущую дату вылета, добавь фотографии и сохрани черновик. Нажми «Опубликовать» в списке туров. Первая фотография станет обложкой карточки.
 
-```text
-http://localhost:8000/admin/
-```
+Чтобы проверить работу кабинета под ролью менеджера, добавь отдельную учётную запись в разделе «Сотрудники». Группа «Менеджеры» и её права настраиваются при применении миграций.
 
-Swagger API documentation:
+## Настройки окружения
 
-```text
-http://localhost:8000/api/docs/
-```
+Переменные для локального запуска перечислены в [`.env.example`](.env.example). База и загруженные фотографии хранятся в томах Docker `postgres_data` и `media_data`. Храни пароли и ключи в локальном или серверном `.env`.
 
-## Environment variables
+| Возможность | Настройка |
+| --- | --- |
+| Хранить фотографии в Yandex Object Storage | Установить `MEDIA_USE_S3=True` и заполнить переменные `MEDIA_S3_*`. |
+| Отправлять уведомления о новых заявках | Установить `INQUIRY_NOTIFICATIONS_ENABLED=True`, указать адрес сайта в `INQUIRY_NOTIFICATION_BASE_URL` и заполнить настройки `EMAIL_*` для своего SMTP-провайдера. |
 
-The project reads configuration from `.env`.
+Уведомления отправляются на адреса из профилей активных менеджеров и администраторов. В письме есть ссылка на заявку в кабинете. Для локальной проверки можно указать `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend` и `INQUIRY_NOTIFICATION_BASE_URL=http://127.0.0.1:8000`. Письма будут видны в логах `docker compose logs -f web`.
 
-Example:
+## Структура проекта
 
-```env
-DJANGO_SECRET_KEY=change-me
-DJANGO_DEBUG=True
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+| Раздел | Ответственность |
+| --- | --- |
+| [`catalog/`](catalog/) | Модели туров и направлений, каталог, фильтры, карточки и избранное. |
+| [`inquiries/`](inquiries/) | Формы заявок, сохранение выбранных туров и отправка уведомлений. |
+| [`manager/`](manager/) | Кабинет, редактирование и публикация туров, работа с заявками и сотрудниками. |
+| [`accounts/`](accounts/) | Модель пользователя. |
+| [`pages/`](pages/) | Страницы агентства и направления. |
+| [`config/`](config/) и [`templates/`](templates/) | Общие настройки, маршруты и шаблоны. |
 
-POSTGRES_DB=blog_db
-POSTGRES_USER=blog_user
-POSTGRES_PASSWORD=change-me
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
+## Тестирование
 
-REDIS_URL=redis://redis:6379/1
-
-EMAIL_HOST_USER=your-email@yahoo.com
-EMAIL_HOST_PASSWORD=your-app-password
-DEFAULT_FROM_EMAIL=your-email@yahoo.com
-```
-
-The real `.env` file is ignored by Git and must not be committed.
-
-## Testing
-
-The repository contains **23 automated tests** covering unit, integration, API, authentication, permission, and workflow behaviour.
-
-The suite currently includes:
-
-- 2 authentication tests;
-- 7 article/web integration tests;
-- 11 REST API integration tests;
-- 2 serializer unit tests;
-- 1 complete publishing workflow system test.
-
-Run the complete suite with:
-
-```bash
-docker compose exec web python manage.py test
-```
-
-Other useful checks:
+Команды запускаются из папки проекта при работающих контейнерах.
 
 ```bash
 docker compose exec web python manage.py check
 docker compose exec web python manage.py makemigrations --check --dry-run
-docker compose exec web python manage.py migrate --check
+docker compose exec web python manage.py test
 ```
 
-## Continuous integration
-
-GitHub Actions is configured in:
-
-```text
-.github/workflows/tests.yml
-```
-
-On every push and pull request, the workflow:
-
-1. checks out the repository;
-2. creates `.env` from `.env.example`;
-3. builds the Docker web image;
-4. starts PostgreSQL and Redis;
-5. runs the Django test suite.
-
-## Static and media files
-
-Static assets are stored in:
-
-```text
-static/
-```
-
-WhiteNoise is configured for collected static files, and Docker runs `collectstatic` before starting the development server.
-
-User-uploaded files such as avatars and article cover images are stored under `media/`. The `media/` directory is intentionally excluded from Git.
-
-For a production deployment, user-uploaded media should be served by a dedicated web server or object-storage service.
-
-## Security notes
-
-Secrets are loaded through environment variables and the real `.env` file is excluded from version control.
-
-Production deployment should use:
-
-```env
-DJANGO_DEBUG=False
-```
-
-and should additionally configure HTTPS-related Django security settings, secure cookies, production host names, and production-grade media hosting.
-
-The Docker Compose configuration in this repository is intended primarily for local development and project demonstration.
-
-## Error handling
-
-The project defines custom pages for:
-
-- `400 Bad Request`
-- `403 Forbidden`
-- `404 Not Found`
-- `500 Internal Server Error`
-
-Templates are located in:
-
-```text
-templates/errors/
-```
-
-## License
-
-This project was created as an educational final project.
+При отправке коммитов и открытии pull request [GitHub Actions](.github/workflows/ci.yml) собирает образ, проверяет код Ruff, запускает PostgreSQL и выполняет проверки Django, миграций и тесты.
